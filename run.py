@@ -3,8 +3,8 @@ from flask import Flask, render_template
 # Указываем, где лежат шаблоны и статика
 app = Flask(
     __name__, 
-    template_folder="app/templates", 
-    static_folder="app/static"
+    template_folder="docs/templates", 
+    static_folder="docs/static"
 )
 
 @app.route('/')
