@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Legion Of The Damned</title>
@@ -8,10 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for(filename='style.css') }}">
+    <link rel="stylesheet" href="static/css/style.css">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for(filename='favicon.png') }}">
+    <link rel="icon" type="image/png" href="static/img/favicon.png">
 </head>
 <body>
 
@@ -19,16 +19,16 @@
     <div id="loader" class="show"></div>
 
     <!-- Основной контент -->
-    <div id="content">
+    <div id="content" style="display:none;">
 
         <!-- Верхняя панель -->
         <header>
             <h1>Legion Of The Damned</h1>
             <nav>
-                <a href="{{ url_for('home') }}">Главная</a>
-                <a href="{{ url_for('dashboard') }}">Дашборд</a>
-                <a href="{{ url_for('gallery') }}">Галерея</a>
-                <a href="{{ url_for('about') }}">О клане</a>
+                <a href="index.html">Главная</a>
+                <a href="dashboard.html">Дашборд</a>
+                <a href="gallery.html">Галерея</a>
+                <a href="about.html">О клане</a>
             </nav>
         </header>
 
@@ -42,7 +42,7 @@
                 <div class="news-card">06.02 — Встреча клана</div>
                 <div class="news-card">07.02 — Турнир</div>
 
-                <!-- ВИДЕО ПОД ЗАДАЧАМИ -->
+                <!-- Видео -->
                 <div class="main-video">
                     <iframe
                         width="100%"
@@ -59,7 +59,7 @@
             <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА -->
             <div class="info-center">
                 <h2>Добро пожаловать!</h2>
-                <img src="{{ url_for(filename='favicon.png') }}" alt="Логотип" class="clan-logo">
+                <img src="static/img/favicon.png" alt="Логотип" class="clan-logo">
                 <a href="#" class="join-button">Вступить в клан</a>
             </div>
 
@@ -67,7 +67,8 @@
             <div class="info-right">
                 <h2>Discord сервер</h2>
                 <div class="discord-widget">
-                    <iframe src="https://discord.com/widget?id=828749346505490503&theme=dark"
+                    <iframe
+                        src="https://discord.com/widget?id=828749346505490503&theme=dark"
                         allowtransparency="true"
                         frameborder="0"
                         sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
@@ -76,27 +77,31 @@
             </div>
         </div>
 
-        <!-- Нижний блок: Информация о боте -->
+        <!-- Блок бота -->
         <div id="bot-block">
             <div class="bot-left">
-                <img src="{{ url_for('static', filename='img/bot.png') }}" alt="Void Sentinel" class="bot-image-small">
+                <img src="static/img/bot.png" alt="Void Sentinel" class="bot-image-small">
             </div>
+
             <div class="bot-right">
                 <h2>Void Sentinel</h2>
-                <p>Void Sentinel — это клановый бот, который помогает управлять сервером, отслеживать события и держать участников в курсе всех новостей клана.</p>
+                <p>
+                    Void Sentinel — это клановый бот, который помогает управлять сервером,
+                    отслеживать события и держать участников в курсе всех новостей клана.
+                </p>
 
-                <!-- Аккордеон с категориями -->
+                <!-- Аккордеон -->
                 <div class="bot-accordion">
+
                     <button class="accordion">⚔ Основные функции</button>
                     <div class="panel">
                         <ul>
                             <li>Приветствие новичков</li>
-                            <li>Уведомление об уходе</li>
-                            <li>/помощь — показать все команды и функции</li>
-                            <li>/состав_клана — показать участников клана</li>
-                            <li>/информация_о_сервере</li>
-                            <li>/пинг — проверить статус бота</li>
-                            <li>/заявка — подать заявку на вступление в клан</li>
+                            <li>Уведомления</li>
+                            <li>/помощь</li>
+                            <li>/состав_клана</li>
+                            <li>/пинг</li>
+                            <li>/заявка</li>
                         </ul>
                     </div>
 
@@ -112,35 +117,23 @@
                     <button class="accordion">🎲 Развлекательные</button>
                     <div class="panel">
                         <ul>
-                            <li>/музыка [ссылка] — включить трек из SoundCloud</li>
+                            <li>/музыка</li>
                             <li>/викторина</li>
                             <li>/монетка</li>
-                            <li>/камень_ножницы_бумага</li>
                         </ul>
                     </div>
 
-                    <button class="accordion">📝 Личные заметки</button>
+                    <button class="accordion">🚨 Административные</button>
                     <div class="panel">
                         <ul>
-                            <li>/напомни [минуты] [текст]</li>
-                        </ul>
-                    </div>
-
-                    <button class="accordion">🚨 Административные команды</button>
-                    <div class="panel">
-                        <ul>
-                            <li>/победа</li>
-                            <li>/изгнание</li>
-                            <li>/бан @участник</li>
-                            <li>/разбан [ID]</li>
-                            <li>/кик @участник</li>
-                            <li>/мут @участник [минуты]</li>
-                            <li>/размут @участник</li>
+                            <li>/бан</li>
+                            <li>/кик</li>
+                            <li>/мут</li>
                         </ul>
                     </div>
                 </div>
 
-                <a href="#" class="join-button">Пригласить бота на сервер</a>
+                <a href="#" class="join-button">Пригласить бота</a>
             </div>
         </div>
 
@@ -149,39 +142,35 @@
             <div class="footer-content">
                 <p>© 2026 Legion Of The Damned. Все права защищены.</p>
                 <div class="social-links">
-                    <a href="https://www.instagram.com/damnlegionnaires/" target="_blank" title="Instagram">Instagram</a>
-                    <a href="https://www.youtube.com/@GLOTD" target="_blank" title="YouTube">YouTube</a>
-                    <a href="https://www.tiktok.com/@legion_of_the_damned?is_from_webapp=1&sender_device=pc" target="_blank" title="TikTok">TikTok</a>
+                    <a href="https://www.instagram.com/damnlegionnaires/" target="_blank">Instagram</a>
+                    <a href="https://www.youtube.com/@GLOTD" target="_blank">YouTube</a>
+                    <a href="https://www.tiktok.com/@legion_of_the_damned" target="_blank">TikTok</a>
                 </div>
             </div>
         </footer>
 
-    </div> <!-- конец #content -->
+    </div>
 
-    <!-- JS для loader -->
+    <!-- JS -->
     <script>
-        window.addEventListener('load', function() {
+        window.addEventListener('load', () => {
             const loader = document.getElementById('loader');
             const content = document.getElementById('content');
             loader.classList.add('hide');
-            setTimeout(() => {
-                content.style.display = 'block';
-            }, 500);
+            setTimeout(() => content.style.display = 'block', 500);
         });
 
-        // JS для аккордеона
         const acc = document.getElementsByClassName("accordion");
         for (let i = 0; i < acc.length; i++) {
-            acc[i].addEventListener("click", function() {
+            acc[i].addEventListener("click", function () {
                 this.classList.toggle("active");
                 const panel = this.nextElementSibling;
-                if (panel.style.maxHeight) {
-                    panel.style.maxHeight = null;
-                } else {
-                    panel.style.maxHeight = panel.scrollHeight + "px";
-                }
+                panel.style.maxHeight
+                    ? panel.style.maxHeight = null
+                    : panel.style.maxHeight = panel.scrollHeight + "px";
             });
         }
     </script>
+
 </body>
 </html>
