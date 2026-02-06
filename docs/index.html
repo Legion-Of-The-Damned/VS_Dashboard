@@ -8,10 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for(filename='style.css') }}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for(filename='favicon.png') }}">
 </head>
 <body>
 
@@ -59,7 +59,7 @@
             <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА -->
             <div class="info-center">
                 <h2>Добро пожаловать!</h2>
-                <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="Логотип" class="clan-logo">
+                <img src="{{ url_for(filename='favicon.png') }}" alt="Логотип" class="clan-logo">
                 <a href="#" class="join-button">Вступить в клан</a>
             </div>
 
