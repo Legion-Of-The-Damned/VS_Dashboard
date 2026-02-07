@@ -41,13 +41,13 @@
                 <div class="news-card">07.02 — Турнир</div>
 
                 <!-- Видео с кнопками по бокам -->
-                <div class="main-video" style="position: relative; width: 100%;">
+                <div class="main-video" style="position: relative; width: 100%; margin-top: 10px;">
 
                     <iframe
                         id="videoFrame"
                         width="100%"
                         height="250"
-                        src="https://www.youtube.com/embed/hZ-joKkSKwc"
+                        src="https://www.youtube.com/embed/C0xV4Q29Lcs"
                         title="Legion Of The Damned"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -181,6 +181,7 @@
 
     <!-- JS -->
     <script>
+        // Loader
         window.addEventListener('load', () => {
             const loader = document.getElementById('loader');
             const content = document.getElementById('content');
@@ -188,6 +189,7 @@
             setTimeout(() => content.style.display = 'block', 500);
         });
 
+        // Аккордеон
         const acc = document.getElementsByClassName("accordion");
         for (let i = 0; i < acc.length; i++) {
             acc[i].addEventListener("click", function () {
@@ -199,9 +201,9 @@
             });
         }
 
-        /* ===== ВИДЕО ПЕРЕКЛЮЧЕНИЕ ===== */
+        // ===== ВИДЕО ПЕРЕКЛЮЧЕНИЕ =====
         const videos = [
-            "C0xV4Q29Lcs",
+            "C0xV4Q29Lcs",  // Главное видео при открытии
             "dQw4w9WgXcQ",
             "9bZkp7q19f0"
         ];
@@ -211,12 +213,12 @@
 
         document.getElementById("videoPrev").onclick = () => {
             currentVideo = (currentVideo - 1 + videos.length) % videos.length;
-            frame.src = "https://www.youtube.com/embed/C0xV4Q29Lcs" + videos[currentVideo];
+            frame.src = "https://www.youtube.com/embed/" + videos[currentVideo];
         };
 
         document.getElementById("videoNext").onclick = () => {
             currentVideo = (currentVideo + 1) % videos.length;
-            frame.src = "https://www.youtube.com/embed/IN-B9rHqri0" + videos[currentVideo];
+            frame.src = "https://www.youtube.com/embed/" + videos[currentVideo];
         };
     </script>
 
