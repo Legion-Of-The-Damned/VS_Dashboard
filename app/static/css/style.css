@@ -57,7 +57,12 @@ header h1 {
 }
 
 /* Навигация */
-header nav { display: flex; gap: 15px; }
+header nav {
+    display: flex;
+    gap: 15px;
+    margin-left: auto; /* сдвигаем вправо */
+}
+
 header nav a {
     color: #e60000;
     text-decoration: none;
@@ -69,11 +74,17 @@ header nav a {
     box-shadow: 0 0 10px #e60000;
     transition: all 0.3s ease;
 }
-header nav a:hover, header nav a.active {
+
+header nav a:hover,
+header nav a.active {
     background-color: #ff1a1a;
     color: #000;
     transform: scale(1.05);
     box-shadow: 0 0 20px #ff1a1a;
+}
+
+.lang-switcher {
+    margin-left: 12px;
 }
 
 /* ----------------- Прокрутка ----------------- */
@@ -126,6 +137,33 @@ body { scrollbar-width: thin; scrollbar-color: #e60000 #111111; }
     text-align: center;
 }
 .join-button:hover { background-color: #ff1a1a; transform: scale(1.05); box-shadow: 0 0 25px #ff1a1a; }
+
+.lang-switcher select {
+    background-color: #1a1a1a;
+    color: #e60000;
+    border: 2px solid #e60000;
+    font-family: 'UnifrakturCook', cursive;
+    font-size: 1em;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 0 12px #e60000;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23e60000' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    padding-right: 30px;
+}
+
+.lang-switcher select:hover {
+    box-shadow: 0 0 20px #ff1a1a;
+}
+
+.lang-switcher select:focus {
+    outline: none;
+    box-shadow: 0 0 25px #ff1a1a;
+}
 
 /* ----------------- Стрелки видео ----------------- */
 .main-video {
@@ -198,11 +236,70 @@ body { scrollbar-width: thin; scrollbar-color: #e60000 #111111; }
 .info-right iframe { width: 100%; height: 500px; border: 0; }
 
 /* Нижний блок: бот */
-#bot-block { display: flex; background-color: #111111; margin: 20px; padding: 25px; border: 2px solid #e60000; border-radius: 10px; box-shadow: 0 0 20px #e60000; gap: 20px; flex-wrap: wrap; }
-.bot-left { width: 35%; display: flex; justify-content: center; align-items: center; }
-.bot-image-small { width: 80%; border: 0px solid #e60000; border-radius: 0px; box-shadow: 0 0 0px #e60000; }
-.bot-right { width: 60%; text-align: left; }
-.bot-right h2 { color: #e60000; text-shadow: 0 0 10px #e60000; margin-bottom: 15px; }
+#bot-block {
+    display: flex;
+    background-color: #111111;
+    margin: 20px;
+    padding: 25px;
+    border: 2px solid #e60000;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #e60000;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.bot-left {
+    width: 35%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.bot-image-small {
+    width: 80%;
+    border: 0px solid #e60000;
+    border-radius: 0px;
+    box-shadow: 0 0 0px #e60000;
+}
+.bot-right {
+    width: 60%;
+    text-align: left;
+}
+.bot-right h2 {
+    color: #e60000;
+    text-shadow: 0 0 10px #e60000;
+    margin-bottom: 15px;
+}
+
+/* Кнопки бота */
+.bot-buttons {
+    display: flex;
+    gap: 15px; /* увеличено расстояние между кнопками */
+    margin-top: 15px; /* отступ сверху */
+    flex-wrap: wrap; /* на маленьких экранах кнопки будут переноситься */
+}
+.bot-buttons .join-button,
+.bot-buttons .github-button {
+    padding: 10px 20px; /* увеличен внутренний отступ */
+    font-size: 14px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px #e60000;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+.bot-buttons .github-button {
+    background-color: #24292f;
+    color: #fff;
+    border: 1px solid #24292f;
+}
+.bot-buttons .github-button:hover {
+    background-color: #000;
+    border-color: #fff;
+    color: #fff;
+}
+.bot-buttons .join-button:hover {
+    background-color: #ff1a1a;
+    transform: scale(1.05);
+    box-shadow: 0 0 25px #ff1a1a;
+}
 
 /* Аккордеон */
 .bot-accordion .accordion {
@@ -231,40 +328,95 @@ body { scrollbar-width: thin; scrollbar-color: #e60000 #111111; }
 
 /* ----------------- Футер ----------------- */
 footer {
-    background-color: #1a1a1a;
-    color: #e60000;
-    text-align: center;
-    padding: 20px 10px;
-    border-top: 2px solid #e60000;
-    box-shadow: 0 -0 20px #e60000 inset;
+    background-color: #111111;
+    color: #ccc;
+    padding: 30px 20px 10px 20px;
     font-family: 'UnifrakturCook', cursive;
+    border-top: 2px solid #e60000;
+    box-shadow: 0 -2px 15px #e60000 inset;
 }
 
-footer .footer-content p {
-    margin: 5px 0;
-    font-size: 1em;
-}
-
-footer .social-links {
-    margin-top: 10px;
+.footer-container {
     display: flex;
-    justify-content: center;
-    gap: 15px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-footer .social-links a {
-    color: #e60000;
+.footer-column {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-column h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #e60000; /* красный основной */
+    text-shadow: 0 0 10px #e60000;
+    border-bottom: 1px solid #e60000;
+    padding-bottom: 5px;
+}
+
+.footer-column p,
+.footer-column a {
+    font-size: 14px;
+    color: #ccc;
     text-decoration: none;
-    border: 2px solid #e60000;
-    padding: 5px 10px;
-    border-radius: 5px;
     transition: all 0.3s ease;
-    box-shadow: 0 0 10px #e60000;
 }
 
-footer .social-links a:hover {
-    background-color: #ff1a1a;
-    color: #000;
-    transform: scale(1.05);
-    box-shadow: 0 0 20px #ff1a1a;
+.footer-column a:hover {
+    color: #fff;
+    text-shadow: 0 0 10px #ff1a1a;
+}
+
+/* Соцсети футера */
+.footer-column .social-links a {
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+}
+
+.footer-column .social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: flex-start;
+}
+
+.footer-column .social-links a {
+    color: #ccc;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.footer-column .social-links a:hover {
+    color: #fff;
+    border-color: #ff1a1a;
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+/* Контакты футера */
+.footer-column p {
+    margin: 5px 0;
+}
+
+/* Нижняя строка с копирайтом и девизом */
+.footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #888;
+    text-shadow: 0 0 5px #e60000;
+}
+
+.footer-bottom .clan-motto {
+    font-style: italic;
+    color: #ff1a1a;
+    text-shadow: 0 0 15px #ff1a1a;
+    font-size: 14px;
+    margin-top: 5px;
 }
