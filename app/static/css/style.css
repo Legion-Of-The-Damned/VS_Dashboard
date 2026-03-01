@@ -420,3 +420,21 @@ footer {
     font-size: 14px;
     margin-top: 5px;
 }
+
+/* ----------------- Footer Legal ----------------- */
+.footer-bottom .footer-legal {
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+.footer-bottom .footer-legal a {
+    color: #e60000;
+    text-decoration: none;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+.footer-bottom .footer-legal a:hover {
+    color: #ff1a1a;
+    text-shadow: 0 0 8px #ff1a1a;
+}

@@ -1,0 +1,144 @@
+/* ---------- Карточка Discord ---------- */
+.discord-card {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    font-family: 'UnifrakturCook', cursive;
+    max-width: 310px;
+    width: 110%;
+    margin: 20 auto 20px; /* центрирование карточки */
+    border: 2px solid #e60000;
+    box-shadow: 0 0 20px #e60000;
+}
+
+/* ---------- Заголовок ---------- */
+.discord-header {
+    display: flex;
+    justify-content: center; /* выравниваем заголовок по центру */
+    align-items: center;
+    margin-bottom: 16px;
+    font-weight: bold;
+    font-size: 18px;
+    color: #e60000;
+    text-shadow: 0 0 12px #e60000;
+}
+
+/* ---------- Статус сервера ---------- */
+.status-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #43b581;
+    margin-right: 10px;
+    animation: pulse 1.2s infinite;
+}
+
+.status-dot.offline {
+    background: #747f8d;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.6; }
+}
+
+/* ---------- Информация о пользователях ---------- */
+.discord-info {
+    display: flex;
+    justify-content: center; /* выравнивание по центру */
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px; /* расстояние между блоками статистики */
+}
+
+.discord-stat {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* центрирование текста внутри блока */
+    background: #2f3136;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    box-shadow: 0 0 8px #e60000;
+}
+
+.discord-stat strong {
+    font-size: 20px;
+    margin-right: 6px;
+}
+
+/* ---------- Список участников ---------- */
+.discord-members {
+    max-height: 220px;
+    overflow-y: auto;
+    border-top: 1px solid #40444b;
+    padding-top: 8px;
+}
+
+/* ---------- Пользователь ---------- */
+.member {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.member:hover {
+    background: rgba(230, 0, 0, 0.2);
+}
+
+.member img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+    border: 1px solid #e60000;
+}
+
+.member-name {
+    flex: 1;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-left: 8px;
+    border: 1px solid #000;
+    transition: transform 0.2s;
+}
+
+.member-status.online { background: #43b581; }
+.member-status.idle { background: #faa61a; }
+.member-status.dnd { background: #f04747; }
+.member-status.offline { background: #747f8d; }
+
+.member-status:hover {
+    transform: scale(1.4);
+}
+
+/* ---------- Подсказка ---------- */
+.member-name:hover {
+    text-decoration: underline;
+    cursor: default;
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 400px) {
+    .discord-card { padding: 12px; }
+    .member img { width: 28px; height: 28px; }
+    .discord-header { font-size: 16px; }
+    .discord-stat { font-size: 14px; padding: 6px 10px; }
+}
