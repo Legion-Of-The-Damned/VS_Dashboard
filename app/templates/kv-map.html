@@ -2,13 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Карты КВ — Тактика</title>
+<title>Карты КВ — Планирование</title>
 <link rel="stylesheet" href="/static/css/cw_map.css">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 <body>
 
 <header>
-    <h1>Карты КВ — Тактика</h1>
+    <h1>Карты КВ — Планирование</h1>
     <nav>
         <a href="#">Главная</a>
         <a href="#">Дашборд</a>
@@ -17,40 +18,32 @@
     </nav>
 </header>
 
-<!-- ================== ЭКРАН ВЫБОРА КАРТ ================== -->
 <div id="mapChooseScreen" class="map-choose-screen">
-
     <h2>Выберите карту</h2>
-
     <div class="map-grid">
-
         <div class="map-card" onclick="openMap('/static/img/kv_map1.png')">
-            <img src="/static/img/kv_map1.png">
-            <div class="map-name">Карта 1</div>
+            <img src="/static/img/kv_map1.png"><div class="map-name">Хвойный</div>
         </div>
-
         <div class="map-card" onclick="openMap('/static/img/kv_map2.png')">
-            <img src="/static/img/kv_map2.png">
-            <div class="map-name">Карта 2</div>
+            <img src="/static/img/kv_map2.png"><div class="map-name">Кварталы</div>
         </div>
-
         <div class="map-card" onclick="openMap('/static/img/kv_map3.png')">
-            <img src="/static/img/kv_map3.png">
-            <div class="map-name">Карта 3</div>
+            <img src="/static/img/kv_map3.png"><div class="map-name">Роза Ветров</div>
         </div>
-
+        <div class="map-card" onclick="openMap('/static/img/kv_map4.png')">
+            <img src="/static/img/kv_map4.png"><div class="map-name">Малая Бедровка</div>
+        </div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map5.png')">
+            <img src="/static/img/kv_map5.png"><div class="map-name">Низина</div>
+        </div>
     </div>
-
 </div>
 
-<!-- ================== ЭКРАН РЕДАКТОРА ================== -->
 <div id="editorScreen" style="display:none;">
-
     <div class="map-container">
         <canvas id="mapCanvas"></canvas>
         <input type="text" id="textInput">
     </div>
-
     <div class="tools-panel">
         <h3>Инструменты</h3>
         <button onclick="setTool('hand')">✋ Перемещение</button>
@@ -67,24 +60,19 @@
         <button onclick="backToChoose()">← К выбору карт</button>
         <input type="file" id="fileLoader" style="display:none;" onchange="handleFile(event)">
     </div>
-
 </div>
 
 <script>
 const chooseScreen = document.getElementById('mapChooseScreen');
 const editorScreen = document.getElementById('editorScreen');
-
 const canvas = document.getElementById('mapCanvas');
 const ctx = canvas.getContext('2d');
-const textInput = document.getElementById('textInput');
 
 let mapImg = new Image();
-
-let camX=0, camY=0, scale=1;
+let camX = 0, camY = 0, scale = 1;
 let tool='pen', color='#ff1a1a', lineWidth=3;
 let drawing=false, startX=0, startY=0;
 let actions=[], previewShape=null;
-let movingText=null, moveOffset={x:0,y:0};
 let isPanning=false, panStart={x:0,y:0};
 let needsRedraw=false;
 
@@ -93,10 +81,8 @@ document.body.style.overflow = 'hidden';
 function openMap(src){
     chooseScreen.style.display='none';
     editorScreen.style.display='block';
-
     mapImg.src = src;
     mapImg.onload = () => requestRedraw();
-
     actions=[];
     camX=0; camY=0; scale=1;
     resizeCanvas();
@@ -108,12 +94,15 @@ function backToChoose(){
 }
 
 document.getElementById('colorPicker').addEventListener('change', e => color=e.target.value);
-function setTool(t){ tool=t; previewShape=null; movingText=null; requestRedraw(); }
+function setTool(t){ tool=t; previewShape=null; requestRedraw(); }
 
 canvas.addEventListener('mousedown', e=>{
     const [lx,ly]=screenToLogical(e.clientX,e.clientY);
-    if(tool==='hand'){ isPanning=true; panStart={x:e.clientX, y:e.clientY}; canvas.style.cursor='grabbing'; }
-    else if(tool==='text'){
+    if(tool==='hand'){ 
+        isPanning=true; 
+        panStart={x:e.clientX, y:e.clientY}; 
+        canvas.style.cursor='grabbing'; 
+    } else if(tool==='text'){
         const txt=prompt('Введите текст:');
         if(txt) actions.push({tool:'text',color,x:lx,y:ly,text:txt});
         requestRedraw();
@@ -125,7 +114,6 @@ canvas.addEventListener('mousedown', e=>{
 
 canvas.addEventListener('mousemove', e=>{
     const [lx,ly]=screenToLogical(e.clientX,e.clientY);
-
     if(tool==='hand' && isPanning){
         camX -= (e.clientX-panStart.x)/scale;
         camY -= (e.clientY-panStart.y)/scale;
@@ -154,18 +142,52 @@ canvas.addEventListener('mouseup', e=>{
 
 canvas.addEventListener('wheel', e=>{
     e.preventDefault();
-    const rect=canvas.getBoundingClientRect();
-    const mouseX=e.clientX-rect.left, mouseY=e.clientY-rect.top;
-    const factor=e.deltaY<0?1.1:1/1.1;
-    const lx=camX+mouseX/scale, ly=camY+mouseY/scale;
-    scale*=factor;
-    camX=lx-mouseX/scale; camY=ly-mouseY/scale;
+
+    // центр canvas в экранных координатах
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // логическая точка в центре ДО зума
+    const worldX = camX + centerX / scale;
+    const worldY = camY + centerY / scale;
+
+    // меняем масштаб
+    const factor = e.deltaY < 0 ? 1.1 : 1/1.1;
+    scale *= factor;
+
+    // возвращаем ту же точку в центр
+    camX = worldX - centerX / scale;
+    camY = worldY - centerY / scale;
+
     requestRedraw();
 });
 
-function screenToLogical(sx,sy){
-    const rect=canvas.getBoundingClientRect();
-    return [(sx-rect.left)/scale+camX,(sy-rect.top)/scale+camY];
+function screenToLogical(sx, sy){
+    const rect = canvas.getBoundingClientRect();
+    return [
+        (sx - rect.left)/scale + camX,
+        (sy - rect.top)/scale + camY
+    ];
+}
+
+// Возвращает координаты и размеры карты для drawImage
+function getOffsets(){
+    const canvasRatio = canvas.width / canvas.height;
+    const mapRatio = mapImg.width / mapImg.height;
+
+    let drawX=0, drawY=0, drawWidth, drawHeight;
+
+    if(mapRatio > canvasRatio){
+        drawWidth = canvas.width;
+        drawHeight = drawWidth / mapRatio;
+        drawY = (canvas.height - drawHeight)/2;
+    } else {
+        drawHeight = canvas.height;
+        drawWidth = drawHeight * mapRatio;
+        drawX = (canvas.width - drawWidth)/2;
+    }
+
+    return {drawX, drawY, drawWidth, drawHeight};
 }
 
 function setCtxStyle(col){
@@ -197,16 +219,27 @@ function redraw(){
     ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
+    const offsets = getOffsets();
     ctx.setTransform(scale,0,0,scale,-camX*scale,-camY*scale);
-    ctx.drawImage(mapImg,0,0,1200,800);
+    ctx.drawImage(mapImg, offsets.drawX, offsets.drawY, offsets.drawWidth, offsets.drawHeight);
 
     for(const act of actions){
         setCtxStyle(act.color);
-        if(act.tool==='line'){ ctx.beginPath(); ctx.moveTo(act.startX,act.startY); ctx.lineTo(act.endX,act.endY); ctx.stroke(); }
-        else if(act.tool==='circle'){ ctx.beginPath(); ctx.arc(act.cx,act.cy,act.radius,0,2*Math.PI); ctx.stroke(); }
+        if(act.tool==='line'){ 
+            ctx.beginPath(); 
+            ctx.moveTo(act.startX,act.startY); 
+            ctx.lineTo(act.endX,act.endY); 
+            ctx.stroke(); 
+        }
+        else if(act.tool==='circle'){ 
+            ctx.beginPath(); 
+            ctx.arc(act.cx,act.cy,act.radius,0,2*Math.PI); 
+            ctx.stroke(); 
+        }
         else if(act.tool==='arrow') drawArrow(act.startX,act.startY,act.endX,act.endY,act.color);
         else if(act.tool==='pen'){
-            ctx.beginPath(); ctx.moveTo(act.path[0].x,act.path[0].y);
+            ctx.beginPath(); 
+            ctx.moveTo(act.path[0].x,act.path[0].y);
             for(let i=1;i<act.path.length;i++) ctx.lineTo(act.path[i].x,act.path[i].y);
             ctx.stroke();
         }

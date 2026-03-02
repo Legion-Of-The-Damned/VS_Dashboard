@@ -6,11 +6,10 @@ html, body {
     font-family: 'UnifrakturCook', cursive;
     background-color: #000;
     color: #fff;
-    overflow-y: scroll;
-    scroll-behavior: smooth;
+    overflow: hidden; /* для канваса */
 }
 
-/* ----------------- Шапка ----------------- */
+/* ----------------- Шапка и навигация ----------------- */
 header {
     display: flex;
     justify-content: space-between;
@@ -50,107 +49,70 @@ nav a.active {
     box-shadow: 0 0 20px #ff1a1a;
 }
 
-.map-choose-screen{
-    padding:40px;
-    text-align:center;
-}
-
-.map-grid{
-    display:flex;
-    gap:30px;
-    justify-content:center;
-    flex-wrap:wrap;
-    margin-top:30px;
-}
-
-.map-card{
-    width:260px;
-    border-radius:14px;
-    overflow:hidden;
-    background:#1b1b1b;
-    cursor:pointer;
-    transition:0.25s;
-    box-shadow:0 8px 25px rgba(0,0,0,0.4);
-}
-
-.map-card:hover{
-    transform:translateY(-6px) scale(1.02);
-    box-shadow:0 14px 40px rgba(0,0,0,0.6);
-}
-
-.map-card img{
-    width:100%;
-    height:170px;
-    object-fit:cover;
-}
-
-.map-name{
-    padding:14px;
-    font-weight:bold;
-    font-size:18px;
-}
-
-/* ----------------- Контент главной ----------------- */
-#info-block {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    background-color: #111;
-    border-bottom: 2px solid #e60000;
-    padding: 20px;
-}
-
-.info-left, .info-right { width: 25%; }
-.info-center { width: 40%; text-align: center; display: flex; flex-direction: column; align-items: center; }
-
-.news-card {
-    background-color: #1a1a1a;
-    border: 1px solid #e60000;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
-    box-shadow: 0 0 10px #e60000;
-    transition: all 0.3s ease;
-}
-.news-card:hover { box-shadow: 0 0 20px #ff1a1a; transform: translateY(-2px); }
-
-.clan-logo {
-    width: 450px;
-    margin: 15px 0;
-    box-shadow: 0 0 0px #e60000;
-}
-
-/* ----------------- Кнопки ----------------- */
-.join-button {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 25px;
-    background-color: #e60000;
-    color: #fff;
-    text-decoration: none;
-    font-size: 1.1em;
-    border-radius: 8px;
-    box-shadow: 0 0 15px #e60000;
-    transition: all 0.3s ease;
+/* ----------------- Экран выбора карты ----------------- */
+.map-choose-screen {
+    padding: 40px;
     text-align: center;
 }
-.join-button:hover {
-    background-color: #ff1a1a;
-    transform: scale(1.05);
-    box-shadow: 0 0 25px #ff1a1a;
+
+.map-grid {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
 }
 
-/* ----------------- Канвас и инструменты (для карты) ----------------- */
+.map-card {
+    width: 260px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #1b1b1b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(230,0,0,0.5);
+    border: 2px solid #e60000;
+}
+
+.map-card:hover {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 0 25px #ff1a1a, 0 8px 30px rgba(255,26,26,0.6);
+    border-color: #ff1a1a;
+}
+
+.map-card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.map-card:hover img {
+    transform: scale(1.03);
+}
+
+.map-name {
+    padding: 14px;
+    font-weight: bold;
+    font-size: 18px;
+    text-align: center;
+    color: #e60000;
+    text-shadow: 0 0 8px #ff1a1a;
+    background: #1a1a1a;
+}
+
+/* ----------------- Канвас и панель инструментов ----------------- */
 .map-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 60px); /* вычитаем только высоту шапки */
+    height: calc(100vh - 60px); /* учитываем высоту шапки */
     overflow: hidden;
     background: #111;
-    top: 0; /* убираем лишний отступ */
 }
 
-canvas { display: block; }
+canvas {
+    display: block;
+}
 
 .tools-panel {
     position: fixed;
@@ -187,9 +149,14 @@ canvas { display: block; }
 }
 
 .tools-panel button:hover,
-.tools-panel input[type=color]:hover { background: #ff1a1a; }
+.tools-panel input[type=color]:hover {
+    background: #ff1a1a;
+}
 
-input[type=color] { padding: 0; height: 35px; }
+input[type=color] {
+    padding: 0;
+    height: 35px;
+}
 
 #textInput {
     position: absolute;
@@ -203,11 +170,11 @@ input[type=color] { padding: 0; height: 35px; }
     outline: none;
 }
 
-/* ----------------- Фиксированный селектор карты ----------------- */
+/* ----------------- Селектор карт (если нужен фиксированный) ----------------- */
 .map-selector {
     position: fixed;
     left: 10px;
-    top: 80px; /* чуть ниже шапки */
+    top: 80px;
     background: #1a1a1a;
     border: 2px solid #e60000;
     border-radius: 10px;
