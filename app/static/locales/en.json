@@ -1,0 +1,56 @@
+{
+  "nav_dashboard": "Dashboard",
+  "nav_about": "About clan",
+  "nav_beacon": "Legion Beacon",
+  "nav_map": "Maps CW",
+  "news_title": "Clan news",
+  "welcome": "Welcome!",
+  "join_clan": "Join the clan",
+  "join_clan_href": "https://discord.gg/nSTUPXwZbu",
+  "discord": "Discord server",
+  "bot_title": "Void Sentinel",
+  "bot_desc": "Void Sentinel — is a clan bot that helps manage the server, track events, and keep members informed of all clan news.",
+  "invite_bot": "Invite bot",
+  "invite_bot_href": "https://discord.com/oauth2/authorize?client_id=1230464176745480254",
+  "footer": "© 2026 Legion Of The Damned. All rights reserved.",
+  "footer_socials": "Socials",
+  "footer_contacts": "Contacts",
+  "footer_motto": "Legion Of The Damned — Never Die",
+  "tos": "Terms of Service",
+  "privacy": "Privacy Policy",
+
+  "bot_commands": {
+    "Main Functions": [
+      "Welcome new members",
+      "Notify when members leave",
+      "/help — show all commands and functions",
+      "/clan_members — show clan participants",
+      "/server_info",
+      "/ping — check bot status",
+      "/apply — submit a request to join the clan"
+    ],
+    "Combat Commands": [
+      "/duel",
+      "/stats",
+      "/overall_stats"
+    ],
+    "Entertainment": [
+      "/music [link] — play track from SoundCloud",
+      "/quiz",
+      "/coinflip",
+      "/rock_paper_scissors"
+    ],
+    "Personal Notes": [
+      "/remind [minutes] [text]"
+    ],
+    "Admin Commands": [
+      "/victory",
+      "/exile",
+      "/ban @member",
+      "/unban [ID]",
+      "/kick @member",
+      "/mute @member [minutes]",
+      "/unmute @member"
+    ]
+  }
+}

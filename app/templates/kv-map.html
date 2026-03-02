@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Карты КВ — Тактика</title>
+<link rel="stylesheet" href="/static/css/cw_map.css">
+</head>
+<body>
+
+<header>
+    <h1>Карты КВ — Тактика</h1>
+    <nav>
+        <a href="#">Главная</a>
+        <a href="#">Дашборд</a>
+        <a href="#">О клане</a>
+        <a href="#">Карты КВ</a>
+    </nav>
+</header>
+
+<!-- ================== ЭКРАН ВЫБОРА КАРТ ================== -->
+<div id="mapChooseScreen" class="map-choose-screen">
+
+    <h2>Выберите карту</h2>
+
+    <div class="map-grid">
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map1.png')">
+            <img src="/static/img/kv_map1.png">
+            <div class="map-name">Карта 1</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map2.png')">
+            <img src="/static/img/kv_map2.png">
+            <div class="map-name">Карта 2</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map3.png')">
+            <img src="/static/img/kv_map3.png">
+            <div class="map-name">Карта 3</div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================== ЭКРАН РЕДАКТОРА ================== -->
+<div id="editorScreen" style="display:none;">
+
+    <div class="map-container">
+        <canvas id="mapCanvas"></canvas>
+        <input type="text" id="textInput">
+    </div>
+
+    <div class="tools-panel">
+        <h3>Инструменты</h3>
+        <button onclick="setTool('hand')">✋ Перемещение</button>
+        <button onclick="setTool('pen')">✏ Карандаш</button>
+        <button onclick="setTool('line')">━ Линия</button>
+        <button onclick="setTool('circle')">◯ Круг</button>
+        <button onclick="setTool('arrow')">➤ Стрелка</button>
+        <button onclick="setTool('text')">🅰️ Текст</button>
+        <button onclick="undoAction()">↩ Назад</button>
+        <input type="color" id="colorPicker" value="#ff1a1a">
+        <button onclick="clearCanvas()">Очистить</button>
+        <button onclick="saveMap()">Сохранить</button>
+        <button onclick="loadMap()">Загрузить</button>
+        <button onclick="backToChoose()">← К выбору карт</button>
+        <input type="file" id="fileLoader" style="display:none;" onchange="handleFile(event)">
+    </div>
+
+</div>
+
+<script>
+const chooseScreen = document.getElementById('mapChooseScreen');
+const editorScreen = document.getElementById('editorScreen');
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+const textInput = document.getElementById('textInput');
+
+let mapImg = new Image();
+
+let camX=0, camY=0, scale=1;
+let tool='pen', color='#ff1a1a', lineWidth=3;
+let drawing=false, startX=0, startY=0;
+let actions=[], previewShape=null;
+let movingText=null, moveOffset={x:0,y:0};
+let isPanning=false, panStart={x:0,y:0};
+let needsRedraw=false;
+
+document.body.style.overflow = 'hidden';
+
+function openMap(src){
+    chooseScreen.style.display='none';
+    editorScreen.style.display='block';
+
+    mapImg.src = src;
+    mapImg.onload = () => requestRedraw();
+
+    actions=[];
+    camX=0; camY=0; scale=1;
+    resizeCanvas();
+}
+
+function backToChoose(){
+    editorScreen.style.display='none';
+    chooseScreen.style.display='block';
+}
+
+document.getElementById('colorPicker').addEventListener('change', e => color=e.target.value);
+function setTool(t){ tool=t; previewShape=null; movingText=null; requestRedraw(); }
+
+canvas.addEventListener('mousedown', e=>{
+    const [lx,ly]=screenToLogical(e.clientX,e.clientY);
+    if(tool==='hand'){ isPanning=true; panStart={x:e.clientX, y:e.clientY}; canvas.style.cursor='grabbing'; }
+    else if(tool==='text'){
+        const txt=prompt('Введите текст:');
+        if(txt) actions.push({tool:'text',color,x:lx,y:ly,text:txt});
+        requestRedraw();
+    } else {
+        drawing=true; startX=lx; startY=ly;
+        if(tool==='pen') actions.push({tool:'pen',color,path:[{x:startX,y:startY}]});
+    }
+});
+
+canvas.addEventListener('mousemove', e=>{
+    const [lx,ly]=screenToLogical(e.clientX,e.clientY);
+
+    if(tool==='hand' && isPanning){
+        camX -= (e.clientX-panStart.x)/scale;
+        camY -= (e.clientY-panStart.y)/scale;
+        panStart={x:e.clientX, y:e.clientY};
+        requestRedraw();
+    }
+    else if(drawing){
+        if(tool==='pen') actions[actions.length-1].path.push({x:lx,y:ly});
+        else if(tool==='circle') previewShape={type:'circle',cx:startX,cy:startY,radius:Math.hypot(lx-startX,ly-startY),color};
+        else if(tool==='arrow') previewShape={type:'arrow',startX,startY,endX:lx,endY:ly,color};
+        requestRedraw();
+    }
+});
+
+canvas.addEventListener('mouseup', e=>{
+    if(drawing){
+        drawing=false;
+        const [lx,ly]=screenToLogical(e.clientX,e.clientY);
+        if(tool==='line') actions.push({tool:'line',color,startX,startY,endX:lx,endY:ly});
+        else if(tool==='circle') actions.push({tool:'circle',color,cx:startX,cy:startY,radius:Math.hypot(lx-startX,ly-startY)});
+        else if(tool==='arrow') actions.push({tool:'arrow',color,startX,startY,endX:lx,endY:ly});
+        previewShape=null; requestRedraw();
+    }
+    if(isPanning){ isPanning=false; canvas.style.cursor='grab'; }
+});
+
+canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const rect=canvas.getBoundingClientRect();
+    const mouseX=e.clientX-rect.left, mouseY=e.clientY-rect.top;
+    const factor=e.deltaY<0?1.1:1/1.1;
+    const lx=camX+mouseX/scale, ly=camY+mouseY/scale;
+    scale*=factor;
+    camX=lx-mouseX/scale; camY=ly-mouseY/scale;
+    requestRedraw();
+});
+
+function screenToLogical(sx,sy){
+    const rect=canvas.getBoundingClientRect();
+    return [(sx-rect.left)/scale+camX,(sy-rect.top)/scale+camY];
+}
+
+function setCtxStyle(col){
+    ctx.strokeStyle=col;
+    ctx.fillStyle=col;
+    ctx.lineWidth=lineWidth*scale;
+    ctx.lineCap='round';
+}
+
+function drawArrow(x1,y1,x2,y2,col){
+    setCtxStyle(col);
+    const head=15, dx=x2-x1, dy=y2-y1, angle=Math.atan2(dy,dx);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-head*Math.cos(angle-Math.PI/6), y2-head*Math.sin(angle-Math.PI/6));
+    ctx.lineTo(x2-head*Math.cos(angle+Math.PI/6), y2-head*Math.sin(angle+Math.PI/6));
+    ctx.closePath(); ctx.fill();
+}
+
+function requestRedraw(){
+    if(!needsRedraw){
+        needsRedraw=true;
+        requestAnimationFrame(()=>{ redraw(); needsRedraw=false; });
+    }
+}
+
+function redraw(){
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.setTransform(scale,0,0,scale,-camX*scale,-camY*scale);
+    ctx.drawImage(mapImg,0,0,1200,800);
+
+    for(const act of actions){
+        setCtxStyle(act.color);
+        if(act.tool==='line'){ ctx.beginPath(); ctx.moveTo(act.startX,act.startY); ctx.lineTo(act.endX,act.endY); ctx.stroke(); }
+        else if(act.tool==='circle'){ ctx.beginPath(); ctx.arc(act.cx,act.cy,act.radius,0,2*Math.PI); ctx.stroke(); }
+        else if(act.tool==='arrow') drawArrow(act.startX,act.startY,act.endX,act.endY,act.color);
+        else if(act.tool==='pen'){
+            ctx.beginPath(); ctx.moveTo(act.path[0].x,act.path[0].y);
+            for(let i=1;i<act.path.length;i++) ctx.lineTo(act.path[i].x,act.path[i].y);
+            ctx.stroke();
+        }
+        else if(act.tool==='text'){
+            ctx.font=`${20*scale}px Arial`;
+            ctx.fillText(act.text,act.x,act.y);
+        }
+    }
+
+    ctx.setTransform(1,0,0,1,0,0);
+}
+
+function resizeCanvas(){
+    const container = document.querySelector('.map-container');
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    requestRedraw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+function clearCanvas(){ actions=[]; requestRedraw(); }
+function undoAction(){ actions.pop(); requestRedraw(); }
+
+function saveMap(){
+    const data="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(actions));
+    const a=document.createElement('a'); a.href=data; a.download="map_tactic.json"; a.click();
+}
+
+function loadMap(){ document.getElementById('fileLoader').click(); }
+
+function handleFile(e){
+    const file=e.target.files[0];
+    const reader=new FileReader();
+    reader.onload=ev=>{ actions=JSON.parse(ev.target.result); requestRedraw(); };
+    reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>

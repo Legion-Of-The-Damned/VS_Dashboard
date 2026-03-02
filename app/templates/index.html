@@ -4,140 +4,114 @@
     <meta charset="UTF-8">
     <title>Legion Of The Damned</title>
 
-    <!-- Готический шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
 
-    <!-- CSS -->
     <link rel="stylesheet" href="static/css/style.css">
     <link rel="stylesheet" href="static/css/discord-widget.css">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="static/img/favicon.png">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 <body>
 
-<!-- Loader -->
 <div id="loader" class="show"></div>
 
-<!-- Контент -->
 <div id="content" style="display:none;">
 
-    <!-- HEADER -->
-    <header>
-        <h1>Legion Of The Damned</h1>
+<header>
+    <h1>Legion Of The Damned</h1>
 
-        <nav>
-            <a href="dashboard.html" data-i18n="nav_dashboard">Дашборд</a>
-            <a href="about.html" data-i18n="nav_about">О клане</a>
-            <a href="#" id="legionBeaconButton" data-i18n="nav_beacon">Legion Beacon</a>
-        </nav>
+    <nav>
+        <a href="dashboard.html" data-i18n="nav_dashboard">Дашборд</a>
+        <a href="about.html" data-i18n="nav_about">О клане</a>
+        <a href="#" id="legionBeaconButton" data-i18n="nav_beacon">Legion Beacon</a>
+        <a href="/kv-map" data-i18n="nav_kv_map">Карты КВ</a>
+    </nav>
 
-        <!-- Выбор языка -->
-        <div class="lang-switcher">
-            <select id="langSelect">
-                <option value="ua">UA</option>
-                <option value="ru">RU</option>
-                <option value="en">EN</option>
-            </select>
-        </div>
-    </header>
-
-    <!-- INFO BLOCK -->
-    <div id="info-block">
-
-        <!-- LEFT -->
-        <div class="info-left">
-            <h2 data-i18n="news_title">Новости клана</h2>
-            <div class="news-card">05.02 — Рейд на босса</div>
-            <div class="news-card">06.02 — Встреча клана</div>
-            <div class="news-card">07.02 — Турнир</div>
-
-            <!-- Видео -->
-            <div class="main-video" style="position:relative;margin-top:10px;">
-                <iframe id="videoFrame" width="100%" height="250" src="https://www.youtube.com/embed/C0xV4Q29Lcs" allowfullscreen></iframe>
-                <button id="videoPrev" style="position:absolute;top:50%;left:0;transform:translateY(-50%);">⬅</button>
-                <button id="videoNext" style="position:absolute;top:50%;right:0;transform:translateY(-50%);">➡</button>
-            </div>
-        </div>
-
-        <!-- CENTER -->
-        <div class="info-center">
-            <h2 data-i18n="welcome">Добро пожаловать!</h2>
-            <img src="static/img/favicon.png" class="clan-logo" alt="Logo">
-            <a id="joinClanButton" class="join-button" data-i18n="join_clan" target="_blank">Вступити до клану</a>
-        </div>
-
-        <!-- RIGHT -->
-        <div class="info-right">
-            <h2 data-i18n="discord">Discord сервер</h2>
-            <div id="discord-custom-widget"></div>
-            </div>
-        </div>
-
+    <div class="lang-switcher">
+        <select id="langSelect">
+            <option value="ua">UA</option>
+            <option value="ru">RU</option>
+            <option value="en">EN</option>
+        </select>
     </div>
+</header>
 
-    <!-- BOT BLOCK -->
-    <div id="bot-block">
-        <div class="bot-left">
-            <img src="static/img/bot.png" class="bot-image-small" alt="Bot">
-        </div>
+<div id="info-block">
 
-        <div class="bot-right">
-            <h2 data-i18n="bot_title">Void Sentinel</h2>
-            <p data-i18n="bot_desc">
-                Void Sentinel — это клановый бот, который помогает управлять сервером, отслеживать события и держать участников в курсе всех новостей клана.
-            </p>
+    <div class="info-left">
+        <h2 data-i18n="news_title">Новости клана</h2>
+        <div class="news-card">05.02 — Рейд на босса</div>
+        <div class="news-card">06.02 — Встреча клана</div>
+        <div class="news-card">07.02 — Турнир</div>
 
-            <!-- АККОРДЕОН -->
-            <div id="bot-accordion" class="bot-accordion"></div>
-
-            <!-- Кнопки -->
-            <div class="bot-buttons">
-                <a id="inviteBotButton" href="#" class="join-button" data-i18n="invite_bot" target="_blank">Пригласить бота</a>
-                <a href="https://github.com/Legion-Of-The-Damned/void-sentinel" class="join-button github-button" target="_blank">GitHub Репозиторий</a>
-            </div>
+        <div class="main-video" style="position:relative;margin-top:10px;">
+            <iframe id="videoFrame" width="100%" height="250" src="https://www.youtube.com/embed/C0xV4Q29Lcs" allowfullscreen></iframe>
+            <button id="videoPrev" style="position:absolute;top:50%;left:0;transform:translateY(-50%);">⬅</button>
+            <button id="videoNext" style="position:absolute;top:50%;right:0;transform:translateY(-50%);">➡</button>
         </div>
     </div>
 
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-container">
-            <!-- Соцсети -->
-            <div class="footer-column">
-                <h3 data-i18n="footer_socials">Соцсети</h3>
-                <div class="social-links">
-                    <a href="https://www.tiktok.com/@legion_of_the_damned?is_from_webapp=1&sender_device=pc" target="_blank">TikTok</a>
-                    <a href="https://steamcommunity.com/groups/clandamned" target="_blank">Steam Community</a>
-                    <a href="https://www.instagram.com/damnlegionnaires/" target="_blank">Instagram</a>
-                    <a href="https://www.twitch.tv/legion_of_damned" target="_blank">Twitch</a>
-                    <a href="https://www.youtube.com/@GLOTD" target="_blank">YouTube</a>
-                    <a href="https://x.com/LOTDLegion" target="_blank">Twitter</a>
-                </div>
-            </div>
+    <div class="info-center">
+        <h2 data-i18n="welcome">Добро пожаловать!</h2>
+        <img src="static/img/favicon.png" class="clan-logo" alt="Logo">
+        <a id="joinClanButton" class="join-button" data-i18n="join_clan" target="_blank">Вступить</a>
+    </div>
 
-            <!-- Контакты -->
-            <div class="footer-column">
-                <h3 data-i18n="footer_contacts">Контакты</h3>
-                <p>Email: <a href="mailto:damnlegionnaires@gmail.com">damnlegionnaires@gmail.com</a></p>
-                <p>Email: <a href="mailto:klegionary@gmail.com">klegionary@gmail.com</a></p>
+    <div class="info-right">
+        <h2 data-i18n="discord">Discord сервер</h2>
+        <div id="discord-custom-widget"></div>
+    </div>
+
+</div>
+
+<div id="bot-block">
+    <div class="bot-left">
+        <img src="static/img/bot.png" class="bot-image-small" alt="Bot">
+    </div>
+
+    <div class="bot-right">
+        <h2 data-i18n="bot_title">Void Sentinel</h2>
+        <p data-i18n="bot_desc">Описание бота</p>
+
+        <div id="bot-accordion" class="bot-accordion"></div>
+
+        <div class="bot-buttons">
+            <a id="inviteBotButton" href="#" class="join-button" data-i18n="invite_bot" target="_blank">Invite</a>
+            <a href="https://github.com/Legion-Of-The-Damned/void-sentinel" class="join-button github-button" target="_blank">GitHub</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <div class="footer-column">
+            <h3 data-i18n="footer_socials">Соцсети</h3>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/@legion_of_the_damned" target="_blank">TikTok</a>
+                <a href="https://steamcommunity.com/groups/clandamned" target="_blank">Steam</a>
+                <a href="https://www.instagram.com/damnlegionnaires/" target="_blank">Instagram</a>
+                <a href="https://www.twitch.tv/legion_of_damned" target="_blank">Twitch</a>
+                <a href="https://www.youtube.com/@GLOTD" target="_blank">YouTube</a>
+                <a href="https://x.com/LOTDLegion" target="_blank">Twitter</a>
             </div>
         </div>
 
-        <!-- Нижняя строка с копирайтом и девизом -->
-        <div class="footer-bottom">
-            <p data-i18n="footer">© 2026 Legion Of The Damned. Все права защищены.</p>
-            <p class="clan-motto" id="clanMotto"></p>
-            <div class="footer-legal">
-                <a href="tos.html" target="_blank" data-i18n="tos">Terms of Service</a> |
-                <a href="privacy.html" target="_blank" data-i18n="privacy">Privacy Policy</a>
+        <div class="footer-column">
+            <h3 data-i18n="footer_contacts">Контакты</h3>
+            <p>Email: <a href="mailto:damnlegionnaires@gmail.com">damnlegionnaires@gmail.com</a></p>
         </div>
-    </footer>
+    </div>
+
+    <div class="footer-bottom">
+        <p data-i18n="footer">© 2026 Legion Of The Damned</p>
+        <p class="clan-motto" id="clanMotto"></p>
+    </div>
+</footer>
 
 </div>
 
 <script src="static/js/discord-widget.js"></script>
 
-<!-- JS -->
 <script>
 
 /* Loader */
@@ -150,119 +124,26 @@ window.addEventListener("load", () => {
 const videos = ["IN-B9rHqri0","hZ-joKkSKwc","C0xV4Q29Lcs"];
 let currentVideo = 0;
 const frame = document.getElementById("videoFrame");
-const videoPrev = document.getElementById("videoPrev");
-const videoNext = document.getElementById("videoNext");
 
-videoPrev.addEventListener("click", () => {
+document.getElementById("videoPrev").onclick = () => {
     currentVideo = (currentVideo - 1 + videos.length) % videos.length;
     frame.src = "https://www.youtube.com/embed/" + videos[currentVideo];
-});
-videoNext.addEventListener("click", () => {
+};
+document.getElementById("videoNext").onclick = () => {
     currentVideo = (currentVideo + 1) % videos.length;
     frame.src = "https://www.youtube.com/embed/" + videos[currentVideo];
-});
-
-/* Локализация UI */
-const translations = {
-    ru: {
-        nav_dashboard:"Дашборд",
-        nav_about:"О клане",
-        nav_beacon:"Legion Beacon",  // ← новая кнопка
-        news_title:"Новости клана",
-        welcome:"Добро пожаловать!",
-        join_clan:"Вступить в клан",
-        join_clan_href:"https://discord.gg/nSTUPXwZbu",
-        discord:"Discord сервер",
-        bot_title:"Void Sentinel",
-        bot_desc:"Void Sentinel — это клановый бот, который помогает управлять сервером, отслеживать события и держать участников в курсе всех новостей клана.",
-        invite_bot:"Пригласить бота",
-        invite_bot_href:"https://discord.com/oauth2/authorize?client_id=1230464176745480254",
-        footer:"© 2026 Legion Of The Damned. Все права защищены.",
-        footer_socials:"Соцсети",
-        footer_contacts:"Контакты",
-        footer_motto:"Легион Проклятых - Никогда не умрёт",
-        tos: "Пользовательское соглашение",
-        privacy: "Политика конфиденциальности"
-    },
-    ua: {
-        nav_dashboard:"Панель",
-        nav_about:"Про клан",
-        nav_beacon:"Legion Beacon",  // ← новая кнопка
-        news_title:"Новини клану",
-        welcome:"Ласкаво просимо!",
-        join_clan:"Вступити до клану",
-        join_clan_href:"https://discord.gg/nSTUPXwZbu",
-        discord:"Discord сервер",
-        bot_title:"Void Sentinel",
-        bot_desc:"Void Sentinel — це клановий бот, який допомагає керувати сервером, відстежувати події та тримати учасників у курсі всіх новин клану.",
-        invite_bot:"Запросити бота",
-        invite_bot_href:"https://discord.com/oauth2/authorize?client_id=1230464176745480254",
-        footer:"© 2026 Legion Of The Damned. Всі права захищені.",
-        footer_socials:"Соцмережі",
-        footer_contacts:"Контакти",
-        footer_motto:"Легіон Проклятих - Ніколи не помре",
-        tos: "Угода користувача",
-        privacy: "Політика конфіденційності"
-    },
-    en: {
-        nav_dashboard:"Dashboard",
-        nav_about:"About clan",
-        nav_beacon:"Legion Beacon",  // ← новая кнопка
-        news_title:"Clan news",
-        welcome:"Welcome!",
-        join_clan:"Join the clan",
-        join_clan_href:"https://discord.gg/nSTUPXwZbu",
-        discord:"Discord server",
-        bot_title:"Void Sentinel",
-        bot_desc:"Void Sentinel — is a clan bot that helps manage the server, track events, and keep members informed of all clan news.",
-        invite_bot:"Invite bot",
-        invite_bot_href:"https://discord.com/oauth2/authorize?client_id=1230464176745480254",
-        footer:"© 2026 Legion Of The Damned. All rights reserved.",
-        footer_socials:"Socials",
-        footer_contacts:"Contacts",
-        footer_motto:"Legion Of The Damned — Never Die",
-        tos: "Terms of Service",
-        privacy: "Privacy Policy"
-    }
 };
-
-/* Кнопки */
-function setButtonLinks(lang) {
-    const data = translations[lang];
-    document.getElementById("joinClanButton").href = data.join_clan_href;
-    document.getElementById("inviteBotButton").href = data.invite_bot_href;
-}
 
 /* Команды бота */
-const botCommands = {
-    ru: {
-        "Основные функции":["Приветствие новичков","Уведомление об уходе","/помощь — показать все команды и функции","/состав_клана — показать участников клана","/информация_о_сервере","/пинг — проверить статус бота","/заявка — подать заявку на вступление в клан"],
-        "Боевые команды":["/дуэль","/статистика","/общая_статистика"],
-        "Развлекательные":["/музыка [ссылка] — включить трек из SoundCloud","/викторина","/монетка","/камень_ножницы_бумага"],
-        "Личные заметки":["/напомни [минуты] [текст]"],
-        "Административные команды":["/победа","/изгнание","/бан @участник","/разбан [ID]","/кик @участник","/мут @участник [минуты]","/размут @участник"]
-    },
-    ua: {
-        "Основні функції":["Привітання новачків","Сповіщення про вихід","/допомога — показати всі команди та функції","/склад_клану — показати учасників клану","/інформація_про_сервер","/пінг — перевірити статус бота","/заявка — подати заявку на вступ до клану"],
-        "Бойові команди":["/дуель","/статистика","/загальна_статистика"],
-        "Розважальні":["/музика [посилання] — увімкнути трек із SoundCloud","/вікторина","/монетка","/камінь_ножиці_папір"],
-        "Особисті нотатки":["/нагадати [хвилини] [текст]"],
-        "Адміністративні команди":["/перемога","/вигнання","/бан @учасник","/розбан [ID]","/кік @учасник","/мут @учасник [хвилини]","/розмут @учасник"]
-    },
-    en: {
-        "Main Functions":["Welcome new members","Notify when members leave","/help — show all commands and functions","/clan_members — show clan participants","/server_info","/ping — check bot status","/apply — submit a request to join the clan"],
-        "Combat Commands":["/duel","/stats","/overall_stats"],
-        "Entertainment":["/music [link] — play track from SoundCloud","/quiz","/coinflip","/rock_paper_scissors"],
-        "Personal Notes":["/remind [minutes] [text]"],
-        "Admin Commands":["/victory","/exile","/ban @member","/unban [ID]","/kick @member","/mute @member [minutes]","/unmute @member"]
-    }
-};
+const botCommands = { /* твой объект оставь как есть */ };
 
-/* Строим аккордеон */
-function buildBotAccordion(lang) {
+function buildBotAccordion() {
     const container = document.getElementById("bot-accordion");
     container.innerHTML = "";
-    const data = botCommands[lang] || botCommands["ru"];
+
+    // Используем команды из загруженного словаря
+    const data = dictionary.bot_commands || {};
+
     for (let section in data) {
         const btn = document.createElement("button");
         btn.className = "accordion";
@@ -270,74 +151,92 @@ function buildBotAccordion(lang) {
 
         const panel = document.createElement("div");
         panel.className = "panel";
+
         const ul = document.createElement("ul");
         data[section].forEach(item => {
             const li = document.createElement("li");
             li.textContent = item;
             ul.appendChild(li);
         });
+
         panel.appendChild(ul);
         container.appendChild(btn);
         container.appendChild(panel);
     }
 
+    // Аккордеон: раскрытие/сворачивание
     container.querySelectorAll(".accordion").forEach(btn => {
-        btn.addEventListener("click", function() {
+        btn.onclick = function () {
             this.classList.toggle("active");
             const panel = this.nextElementSibling;
             panel.style.maxHeight ? panel.style.maxHeight = null : panel.style.maxHeight = panel.scrollHeight + "px";
-        });
+        };
     });
 }
 
-/* Защита изображений */
-document.querySelectorAll('img').forEach(img => {
-    img.addEventListener('contextmenu', e => e.preventDefault());
-    img.addEventListener('dragstart', e => e.preventDefault());
-});
+/* 🌍 JSON локализация */
+const supportedLangs = ["ru", "ua", "en"];
+let dictionary = {};
+let currentDiscordLang = "ru"; // текущий язык для виджета
 
-document.getElementById("legionBeaconButton").addEventListener("click", () => {
-    // пока заглушка, позже можно заменить на реальный URL
-    window.location.href = "legion-beacon.html";
-});
+async function loadLanguage(lang){
+    if(!supportedLangs.includes(lang)) lang="ru";
 
-function setLanguage(lang) {
-    if (!translations[lang]) lang = "ru";
-    localStorage.setItem("lang", lang);
+    try {
+        const res = await fetch(`/static/locales/${lang}.json`);
+        dictionary = await res.json();
+    } catch {
+        const res = await fetch(`/static/locales/ru.json`);
+        dictionary = await res.json();
+        lang = "ru";
+    }
+
     document.documentElement.lang = lang;
+    localStorage.setItem("lang", lang);
+    document.getElementById("langSelect").value = lang;
 
-    // Переводим все элементы с data-i18n
-    document.querySelectorAll("[data-i18n]").forEach(el => {
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
         const key = el.dataset.i18n;
-        if (translations[lang][key]) el.textContent = translations[lang][key];
+        if(dictionary[key]) el.textContent = dictionary[key];
     });
 
-    // Обновляем ссылки кнопок
-    document.getElementById("langSelect").value = lang;
+    if(dictionary.join_clan_href)
+        document.getElementById("joinClanButton").href = dictionary.join_clan_href;
+
+    if(dictionary.invite_bot_href)
+        document.getElementById("inviteBotButton").href = dictionary.invite_bot_href;
+
+    const motto = document.getElementById("clanMotto");
+    if(motto && dictionary.footer_motto)
+        motto.textContent = dictionary.footer_motto;
+
     buildBotAccordion(lang);
-    setButtonLinks(lang);
 
-    // **Обновляем девиз клана**
-    const mottoEl = document.getElementById("clanMotto");
-    if (mottoEl) mottoEl.textContent = translations[lang].footer_motto;
+    // === обновляем Discord виджет с новой локалью ===
+    if(currentDiscordLang !== lang){
+        currentDiscordLang = lang;
+        loadDiscordWidget(lang); // перерисовываем виджет
+    }
 }
 
-function detectUserLanguage() {
-    // Получаем код языка браузера, например "ru", "en", "ua"
-    let browserLang = navigator.language.slice(0,2).toLowerCase();
-
-    // Если язык поддерживается — используем, иначе по умолчанию "ru"
-    if (!translations[browserLang]) browserLang = "ru";
-    return browserLang;
+function detectLanguage(){
+    const saved=localStorage.getItem("lang");
+    if(saved && supportedLangs.includes(saved)) return saved;
+    const browser=navigator.language.slice(0,2);
+    if(supportedLangs.includes(browser)) return browser;
+    return "ru";
 }
 
-// Инициализация языка
-let savedLang = localStorage.getItem("lang");
-let userLang = savedLang && translations[savedLang] ? savedLang : detectUserLanguage();
-setLanguage(userLang);
+document.addEventListener("DOMContentLoaded",()=>{
+    loadLanguage(detectLanguage());
+    document.getElementById("langSelect")
+        .addEventListener("change",e=>loadLanguage(e.target.value));
+});
 
-/* Смена языка */
-document.getElementById("langSelect").addEventListener("change", e => setLanguage(e.target.value));
+/* Beacon */
+document.getElementById("legionBeaconButton").onclick=()=>{
+    window.location.href="legion-beacon.html";
+};
 
 </script>
 

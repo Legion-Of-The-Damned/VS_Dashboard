@@ -73,10 +73,11 @@
 
 /* ---------- Список участников ---------- */
 .discord-members {
-    max-height: 220px;
+    max-height: 400px; /* было 220px, увеличили высоту */
     overflow-y: auto;
     border-top: 1px solid #40444b;
     padding-top: 8px;
+    padding-bottom: 8px; /* добавим нижний отступ для удобства */
 }
 
 /* ---------- Пользователь ---------- */

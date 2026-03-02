@@ -15,9 +15,9 @@ def home():
 def dashboard():
     return "<h1>Дашборд</h1>"
 
-@app.route('/gallery')
-def gallery():
-    return "<h1>Галерея</h1>"
+@app.route('/kv-map')
+def kv_map():
+    return render_template('kv-map.html')
 
 @app.route('/about')
 def about():
