@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>О клане</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+</head>
+<body>
+
+<header>
+    <h1>О клане</h1>
+    <nav>
+        <a href="{{ url_for('home') }}">Главная</a>
+        <a href="{{ url_for('dashboard') }}">Дашборд</a>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="#" id="legionBeaconButton">Legion Beacon</a>
+        <a href="{{ url_for('kv_map') }}">Карты КВ</a>
+    </nav>
+</header>
+
+<main>
+    <h2>Страница в разработке</h2>
+    <p>Контент этой страницы пока недоступен.</p>
+</main>
+
+<script>
+document.getElementById('legionBeaconButton').addEventListener('click', function(e){
+    e.preventDefault();
+    alert('Страница Legion Beacon пока в разработке!');
+});
+</script>
+
+</body>
+</html>

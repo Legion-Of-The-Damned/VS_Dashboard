@@ -10,8 +10,15 @@
 
 <header>
     <h1>Карты КВ — Планирование</h1>
-</header>
+    
+    <nav>
+        <a href="{{ url_for('home') }}" data-i18n="nav_index">Главная</a>
+        <a href="{{ url_for('dashboard') }}">Дашборд</a>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="#" id="legionBeaconButton">Legion Beacon</a>
+    </nav>
 
+</header>
 <div id="mapChooseScreen" class="map-choose-screen">
     <h2>Выберите карту</h2>
     <div class="map-grid">

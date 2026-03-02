@@ -13,7 +13,7 @@ def home():
 
 @app.route('/dashboard')
 def dashboard():
-    return "<h1>Дашборд</h1>"
+    return render_template('dashboard.html')
 
 @app.route('/kv-map')
 def kv_map():
@@ -21,7 +21,7 @@ def kv_map():
 
 @app.route('/about')
 def about():
-    return "<h1>О клане</h1>"
+    return render_template('about.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
