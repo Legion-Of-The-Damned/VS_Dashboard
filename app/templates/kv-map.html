@@ -10,81 +10,80 @@
 
 <header>
     <h1>Карты КВ — Планирование</h1>
-    <nav>
-        <a href="#">Главная</a>
-        <a href="#">Дашборд</a>
-        <a href="#">О клане</a>
-        <a href="#">Карты КВ</a>
-    </nav>
 </header>
 
 <div id="mapChooseScreen" class="map-choose-screen">
     <h2>Выберите карту</h2>
     <div class="map-grid">
-        <div class="map-card" onclick="openMap('/static/img/kv_map1.png')">
-            <img src="/static/img/kv_map1.png"><div class="map-name">Хвойный</div>
-        </div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map2.png')">
-            <img src="/static/img/kv_map2.png"><div class="map-name">Кварталы</div>
-        </div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map3.png')">
-            <img src="/static/img/kv_map3.png"><div class="map-name">Роза Ветров</div>
-        </div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map4.png')">
-            <img src="/static/img/kv_map4.png"><div class="map-name">Малая Бедровка</div>
-        </div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map5.png')">
-            <img src="/static/img/kv_map5.png"><div class="map-name">Низина</div>
-        </div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map1.png')"><img src="/static/img/kv_map1.png"><div>Хвойный</div></div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map2.png')"><img src="/static/img/kv_map2.png"><div>Кварталы</div></div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map3.png')"><img src="/static/img/kv_map3.png"><div>Роза Ветров</div></div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map4.png')"><img src="/static/img/kv_map4.png"><div>Малая Бедровка</div></div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map5.png')"><img src="/static/img/kv_map5.png"><div>Низина</div></div>
     </div>
 </div>
 
 <div id="editorScreen" style="display:none;">
     <div class="map-container">
         <canvas id="mapCanvas"></canvas>
-        <input type="text" id="textInput">
     </div>
+
     <div class="tools-panel">
         <h3>Инструменты</h3>
         <button onclick="setTool('hand')">✋ Перемещение</button>
         <button onclick="setTool('pen')">✏ Карандаш</button>
         <button onclick="setTool('line')">━ Линия</button>
+        <button onclick="setTool('outlineLine')">═ Контурная линия</button>
         <button onclick="setTool('circle')">◯ Круг</button>
         <button onclick="setTool('arrow')">➤ Стрелка</button>
         <button onclick="setTool('text')">🅰️ Текст</button>
-        <button onclick="undoAction()">↩ Назад</button>
+        <button onclick="setTool('attack')">⚔ Атака</button>
+        <button onclick="setTool('defense')">🛡 Оборона</button>
+
+        <label>Цвет</label>
         <input type="color" id="colorPicker" value="#ff1a1a">
+        <label>Толщина</label>
+        <input type="range" id="widthPicker" min="1" max="12" value="3">
+
+        <button onclick="undoAction()">↩ Назад</button>
         <button onclick="clearCanvas()">Очистить</button>
         <button onclick="saveMap()">Сохранить</button>
         <button onclick="loadMap()">Загрузить</button>
+        <button onclick="exportPNG()">PNG</button>
         <button onclick="backToChoose()">← К выбору карт</button>
+
         <input type="file" id="fileLoader" style="display:none;" onchange="handleFile(event)">
     </div>
 </div>
 
 <script>
-const chooseScreen = document.getElementById('mapChooseScreen');
-const editorScreen = document.getElementById('editorScreen');
-const canvas = document.getElementById('mapCanvas');
-const ctx = canvas.getContext('2d');
+const chooseScreen=document.getElementById('mapChooseScreen');
+const editorScreen=document.getElementById('editorScreen');
+const canvas=document.getElementById('mapCanvas');
+const ctx=canvas.getContext('2d');
 
-let mapImg = new Image();
-let camX = 0, camY = 0, scale = 1;
-let tool='pen', color='#ff1a1a', lineWidth=3;
-let drawing=false, startX=0, startY=0;
-let actions=[], previewShape=null;
-let isPanning=false, panStart={x:0,y:0};
+let mapImg=new Image();
+let camX=0,camY=0,scale=1;
+
+let tool='pen';
+let color='#ff1a1a';
+let lineWidth=3;
+
+let drawing=false,startX=0,startY=0;
+let actions=[],preview=null;
+let isPanning=false,panStart={x:0,y:0};
 let needsRedraw=false;
 
-document.body.style.overflow = 'hidden';
+colorPicker.oninput=e=>color=e.target.value;
+widthPicker.oninput=e=>lineWidth=+e.target.value;
 
 function openMap(src){
     chooseScreen.style.display='none';
     editorScreen.style.display='block';
-    mapImg.src = src;
-    mapImg.onload = () => requestRedraw();
+    mapImg.src=src;
+    mapImg.onload=requestRedraw;
     actions=[];
-    camX=0; camY=0; scale=1;
+    camX=0;camY=0;scale=1;
     resizeCanvas();
 }
 
@@ -93,188 +92,261 @@ function backToChoose(){
     chooseScreen.style.display='block';
 }
 
-document.getElementById('colorPicker').addEventListener('change', e => color=e.target.value);
-function setTool(t){ tool=t; previewShape=null; requestRedraw(); }
+function setTool(t){tool=t;preview=null;requestRedraw();}
 
-canvas.addEventListener('mousedown', e=>{
-    const [lx,ly]=screenToLogical(e.clientX,e.clientY);
-    if(tool==='hand'){ 
-        isPanning=true; 
-        panStart={x:e.clientX, y:e.clientY}; 
-        canvas.style.cursor='grabbing'; 
-    } else if(tool==='text'){
+canvas.addEventListener('mousedown',e=>{
+    const [x,y]=screenToLogical(e.clientX,e.clientY);
+
+    if(tool==='hand'){
+        isPanning=true;
+        panStart={x:e.clientX,y:e.clientY};
+        return;
+    }
+
+    if(tool==='text'){
         const txt=prompt('Введите текст:');
-        if(txt) actions.push({tool:'text',color,x:lx,y:ly,text:txt});
+        if(txt) actions.push({tool:'text',color,x,y,text:txt});
         requestRedraw();
-    } else {
-        drawing=true; startX=lx; startY=ly;
-        if(tool==='pen') actions.push({tool:'pen',color,path:[{x:startX,y:startY}]});
+        return;
+    }
+
+    drawing=true;
+    startX=x;startY=y;
+
+    if(tool==='pen'){
+        actions.push({tool:'pen',color,width:lineWidth,path:[{x,y}]});
+    } else if(tool==='attack'||tool==='defense'){
+        const icon = tool==='attack'?'⚔':'🛡';
+        const size = lineWidth * 10;
+        actions.push({tool:'icon',color,x,y,icon,size});
+        drawing=false;
+        requestRedraw();
     }
 });
 
-canvas.addEventListener('mousemove', e=>{
-    const [lx,ly]=screenToLogical(e.clientX,e.clientY);
-    if(tool==='hand' && isPanning){
-        camX -= (e.clientX-panStart.x)/scale;
-        camY -= (e.clientY-panStart.y)/scale;
-        panStart={x:e.clientX, y:e.clientY};
+canvas.addEventListener('mousemove',e=>{
+    const [x,y]=screenToLogical(e.clientX,e.clientY);
+
+    if(tool==='hand'&&isPanning){
+        camX-=(e.clientX-panStart.x)/scale;
+        camY-=(e.clientY-panStart.y)/scale;
+        panStart={x:e.clientX,y:e.clientY};
         requestRedraw();
+        return;
     }
-    else if(drawing){
-        if(tool==='pen') actions[actions.length-1].path.push({x:lx,y:ly});
-        else if(tool==='circle') previewShape={type:'circle',cx:startX,cy:startY,radius:Math.hypot(lx-startX,ly-startY),color};
-        else if(tool==='arrow') previewShape={type:'arrow',startX,startY,endX:lx,endY:ly,color};
-        requestRedraw();
+
+    if(!drawing) return;
+
+    if(tool==='pen'){
+        actions[actions.length-1].path.push({x,y});
+    } else {
+        preview={tool,startX,startY,endX:x,endY:y,color,width:lineWidth};
     }
+    requestRedraw();
 });
 
 canvas.addEventListener('mouseup', e=>{
     if(drawing){
         drawing=false;
-        const [lx,ly]=screenToLogical(e.clientX,e.clientY);
-        if(tool==='line') actions.push({tool:'line',color,startX,startY,endX:lx,endY:ly});
-        else if(tool==='circle') actions.push({tool:'circle',color,cx:startX,cy:startY,radius:Math.hypot(lx-startX,ly-startY)});
-        else if(tool==='arrow') actions.push({tool:'arrow',color,startX,startY,endX:lx,endY:ly});
-        previewShape=null; requestRedraw();
+        const [x,y]=screenToLogical(e.clientX,e.clientY);
+
+        if(tool==='line')
+            actions.push({tool:'line',color,width:lineWidth,startX,startY,endX:x,endY:y});
+        if(tool==='arrow')
+            actions.push({tool:'arrow',color,width:lineWidth,startX,startY,endX:x,endY:y});
+        if(tool==='outlineLine')
+            actions.push({tool:'outlineLine',color,width:lineWidth,startX,startY,endX:x,endY:y});
+        if(tool==='circle')
+            actions.push({tool:'circle',color,width:lineWidth,cx:startX,cy:startY,radius:Math.hypot(x-startX,y-startY)});
+        preview=null;
     }
-    if(isPanning){ isPanning=false; canvas.style.cursor='grab'; }
-});
-
-canvas.addEventListener('wheel', e=>{
-    e.preventDefault();
-
-    // центр canvas в экранных координатах
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    // логическая точка в центре ДО зума
-    const worldX = camX + centerX / scale;
-    const worldY = camY + centerY / scale;
-
-    // меняем масштаб
-    const factor = e.deltaY < 0 ? 1.1 : 1/1.1;
-    scale *= factor;
-
-    // возвращаем ту же точку в центр
-    camX = worldX - centerX / scale;
-    camY = worldY - centerY / scale;
-
+    isPanning=false;
     requestRedraw();
 });
 
-function screenToLogical(sx, sy){
-    const rect = canvas.getBoundingClientRect();
-    return [
-        (sx - rect.left)/scale + camX,
-        (sy - rect.top)/scale + camY
-    ];
+canvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
+    const wx=camX+mx/scale;
+    const wy=camY+my/scale;
+    const f=e.deltaY<0?1.1:1/1.1;
+    scale*=f;
+    camX=wx-mx/scale;
+    camY=wy-my/scale;
+    requestRedraw();
+});
+
+function screenToLogical(sx,sy){
+    const r=canvas.getBoundingClientRect();
+    return[(sx-r.left)/scale+camX,(sy-r.top)/scale+camY];
 }
 
-// Возвращает координаты и размеры карты для drawImage
 function getOffsets(){
-    const canvasRatio = canvas.width / canvas.height;
-    const mapRatio = mapImg.width / mapImg.height;
-
-    let drawX=0, drawY=0, drawWidth, drawHeight;
-
-    if(mapRatio > canvasRatio){
-        drawWidth = canvas.width;
-        drawHeight = drawWidth / mapRatio;
-        drawY = (canvas.height - drawHeight)/2;
-    } else {
-        drawHeight = canvas.height;
-        drawWidth = drawHeight * mapRatio;
-        drawX = (canvas.width - drawWidth)/2;
-    }
-
-    return {drawX, drawY, drawWidth, drawHeight};
+    const cr=canvas.width/canvas.height;
+    const mr=mapImg.width/mapImg.height;
+    let x=0,y=0,w,h;
+    if(mr>cr){w=canvas.width;h=w/mr;y=(canvas.height-h)/2;}
+    else{h=canvas.height;w=h*mr;x=(canvas.width-w)/2;}
+    return{x,y,w,h};
 }
 
-function setCtxStyle(col){
+function style(col,w){
     ctx.strokeStyle=col;
     ctx.fillStyle=col;
-    ctx.lineWidth=lineWidth*scale;
+    ctx.lineWidth=w*scale;
     ctx.lineCap='round';
 }
 
-function drawArrow(x1,y1,x2,y2,col){
-    setCtxStyle(col);
-    const head=15, dx=x2-x1, dy=y2-y1, angle=Math.atan2(dy,dx);
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+function arrow(x1, y1, x2, y2, col, w) {
+    const head = 20;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const a = Math.atan2(dy, dx);
+    const lineEndX = x2 - head * Math.cos(a);
+    const lineEndY = y2 - head * Math.sin(a);
+
+    style(col, w);
     ctx.beginPath();
-    ctx.moveTo(x2,y2);
-    ctx.lineTo(x2-head*Math.cos(angle-Math.PI/6), y2-head*Math.sin(angle-Math.PI/6));
-    ctx.lineTo(x2-head*Math.cos(angle+Math.PI/6), y2-head*Math.sin(angle+Math.PI/6));
-    ctx.closePath(); ctx.fill();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(lineEndX, lineEndY);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(a - Math.PI / 6), y2 - head * Math.sin(a - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(a + Math.PI / 6), y2 - head * Math.sin(a + Math.PI / 6));
+    ctx.closePath();
+    ctx.fillStyle = col;
+    ctx.fill();
 }
 
-function requestRedraw(){
-    if(!needsRedraw){
-        needsRedraw=true;
-        requestAnimationFrame(()=>{ redraw(); needsRedraw=false; });
-    }
+function drawDashedLine(a){
+    ctx.save();
+    ctx.strokeStyle = a.color;
+    ctx.lineWidth = a.width*scale;
+    ctx.setLineDash([10*scale, 5*scale]); // длина линии и промежуток
+    ctx.beginPath();
+    ctx.moveTo(a.startX,a.startY);
+    ctx.lineTo(a.endX,a.endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
 }
 
 function redraw(){
     ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const offsets = getOffsets();
+    const o=getOffsets();
     ctx.setTransform(scale,0,0,scale,-camX*scale,-camY*scale);
-    ctx.drawImage(mapImg, offsets.drawX, offsets.drawY, offsets.drawWidth, offsets.drawHeight);
+    ctx.drawImage(mapImg,o.x,o.y,o.w,o.h);
 
-    for(const act of actions){
-        setCtxStyle(act.color);
-        if(act.tool==='line'){ 
-            ctx.beginPath(); 
-            ctx.moveTo(act.startX,act.startY); 
-            ctx.lineTo(act.endX,act.endY); 
-            ctx.stroke(); 
-        }
-        else if(act.tool==='circle'){ 
-            ctx.beginPath(); 
-            ctx.arc(act.cx,act.cy,act.radius,0,2*Math.PI); 
-            ctx.stroke(); 
-        }
-        else if(act.tool==='arrow') drawArrow(act.startX,act.startY,act.endX,act.endY,act.color);
-        else if(act.tool==='pen'){
-            ctx.beginPath(); 
-            ctx.moveTo(act.path[0].x,act.path[0].y);
-            for(let i=1;i<act.path.length;i++) ctx.lineTo(act.path[i].x,act.path[i].y);
+    for(const a of actions){
+        if(a.tool==='line'){
+            ctx.strokeStyle=a.color;
+            ctx.lineWidth=a.width*scale;
+            ctx.beginPath();
+            ctx.moveTo(a.startX,a.startY);
+            ctx.lineTo(a.endX,a.endY);
             ctx.stroke();
         }
-        else if(act.tool==='text'){
+        if(a.tool==='outlineLine'){
+            drawDashedLine(a);
+        }
+        if(a.tool==='circle'){
+            ctx.strokeStyle=a.color;
+            ctx.lineWidth=a.width*scale;
+            ctx.beginPath();
+            ctx.arc(a.cx,a.cy,a.radius,0,2*Math.PI);
+            ctx.stroke();
+        }
+        if(a.tool==='arrow') arrow(a.startX,a.startY,a.endX,a.endY,a.color,a.width);
+        if(a.tool==='pen'){
+            ctx.strokeStyle=a.color;
+            ctx.lineWidth=a.width*scale;
+            ctx.beginPath();
+            ctx.moveTo(a.path[0].x,a.path[0].y);
+            for(let i=1;i<a.path.length;i++) ctx.lineTo(a.path[i].x,a.path[i].y);
+            ctx.stroke();
+        }
+        if(a.tool==='text'){
+            ctx.fillStyle=a.color;
             ctx.font=`${20*scale}px Arial`;
-            ctx.fillText(act.text,act.x,act.y);
+            ctx.fillText(a.text,a.x,a.y);
+        }
+        if(a.tool==='icon'){
+            ctx.font = `${a.size*scale}px Arial`;
+            ctx.fillStyle = a.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(a.icon, a.x, a.y);
         }
     }
 
-    ctx.setTransform(1,0,0,1,0,0);
+    if(preview){
+        if(preview.tool==='line'){
+            ctx.strokeStyle=preview.color;
+            ctx.lineWidth=preview.width*scale;
+            ctx.beginPath();
+            ctx.moveTo(preview.startX,preview.startY);
+            ctx.lineTo(preview.endX,preview.endY);
+            ctx.stroke();
+        }
+        if(preview.tool==='outlineLine'){
+            drawDashedLine(preview);
+        }
+        if(preview.tool==='circle'){
+            ctx.strokeStyle=preview.color;
+            ctx.lineWidth=preview.width*scale;
+            ctx.beginPath();
+            ctx.arc(preview.startX,preview.startY,
+                Math.hypot(preview.endX-preview.startX,preview.endY-preview.startY),
+                0,2*Math.PI);
+            ctx.stroke();
+        }
+        if(preview.tool==='arrow')
+            arrow(preview.startX,preview.startY,preview.endX,preview.endY,preview.color,preview.width);
+    }
+}
+
+function requestRedraw(){
+    if(!needsRedraw){
+        needsRedraw=true;
+        requestAnimationFrame(()=>{redraw();needsRedraw=false;});
+    }
 }
 
 function resizeCanvas(){
-    const container = document.querySelector('.map-container');
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    const c=document.querySelector('.map-container');
+    canvas.width=c.clientWidth;
+    canvas.height=c.clientHeight;
     requestRedraw();
 }
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize',resizeCanvas);
 
-function clearCanvas(){ actions=[]; requestRedraw(); }
-function undoAction(){ actions.pop(); requestRedraw(); }
+function clearCanvas(){actions=[];requestRedraw();}
+function undoAction(){actions.pop();requestRedraw();}
+
+function exportPNG(){
+    const a=document.createElement('a');
+    a.download='tactic.png';
+    a.href=canvas.toDataURL();
+    a.click();
+}
 
 function saveMap(){
     const data="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(actions));
-    const a=document.createElement('a'); a.href=data; a.download="map_tactic.json"; a.click();
+    const a=document.createElement('a');
+    a.href=data;a.download="map_tactic.json";a.click();
 }
 
-function loadMap(){ document.getElementById('fileLoader').click(); }
-
+function loadMap(){fileLoader.click();}
 function handleFile(e){
-    const file=e.target.files[0];
-    const reader=new FileReader();
-    reader.onload=ev=>{ actions=JSON.parse(ev.target.result); requestRedraw(); };
-    reader.readAsText(file);
+    const r=new FileReader();
+    r.onload=ev=>{actions=JSON.parse(ev.target.result);requestRedraw();}
+    r.readAsText(e.target.files[0]);
 }
 </script>
 
