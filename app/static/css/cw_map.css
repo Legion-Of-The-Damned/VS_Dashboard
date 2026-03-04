@@ -6,7 +6,47 @@ html, body {
     font-family: 'UnifrakturCook', cursive;
     background-color: #000;
     color: #fff;
-    overflow: hidden; /* для канваса */
+    overflow: hidden; /* Чтобы основной скролл не мешал Edge */
+}
+
+/* ----------------- Скролл внутри выбора карты ----------------- */
+.map-choose-screen {
+    height: 100vh;             /* Полный экран */
+    box-sizing: border-box;     /* padding учитывается */
+    padding: 40px;
+    text-align: center;
+    overflow-y: auto;           /* вертикальная прокрутка */
+    overflow-x: hidden;
+
+    scrollbar-width: thin;      /* Firefox */
+    scrollbar-color: #e60000 #111;
+    -ms-overflow-style: auto;   /* Edge */
+}
+
+/* Webkit скролл для Chrome, Edge, Safari */
+.map-choose-screen::-webkit-scrollbar {
+    width: 8px;
+}
+
+.map-choose-screen::-webkit-scrollbar-track {
+    background: #111;
+    border-left: 1px solid #330000;
+}
+
+.map-choose-screen::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        #ff1a1a,
+        #e60000 50%,
+        #990000
+    );
+    border-radius: 4px;
+    box-shadow: 0 0 10px #e60000;
+}
+
+.map-choose-screen::-webkit-scrollbar-thumb:hover {
+    background: #ff1a1a;
+    box-shadow: 0 0 15px #ff1a1a;
 }
 
 /* ----------------- Шапка и навигация ----------------- */
@@ -50,9 +90,15 @@ nav a.active {
 }
 
 /* ----------------- Экран выбора карты ----------------- */
-.map-choose-screen {
-    padding: 40px;
-    text-align: center;
+.map-choose-screen h2 {
+    font-size: 36px;
+    color: #e60000;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 40px;
+    text-shadow: 
+        0 0 10px #e60000,
+        0 0 25px #ff1a1a;
 }
 
 .map-grid {
@@ -105,7 +151,7 @@ nav a.active {
 .map-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 60px); /* учитываем высоту шапки */
+    height: calc(100vh - 60px);
     overflow: hidden;
     background: #111;
 }
@@ -114,17 +160,61 @@ canvas {
     display: block;
 }
 
+/* Панель инструментов */
 .tools-panel {
     position: fixed;
-    right: 10px;
     top: 70px;
+    right: 0;
     z-index: 1000;
     background: #1a1a1a;
     border: 2px solid #e60000;
-    border-radius: 10px;
+    border-radius: 10px 0 0 10px;
     padding: 15px;
     box-shadow: 0 0 20px #e60000;
     width: 170px;
+    height: calc(100% - 80px);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.tools-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tools-panel::-webkit-scrollbar-thumb {
+    background: #e60000;
+    border-radius: 4px;
+}
+
+.tools-panel::-webkit-scrollbar-thumb:hover {
+    background: #ff1a1a;
+}
+
+#hideToolsBtn {
+    position: fixed;
+    top: 120px;
+    right: 170px;
+    width: 25px;
+    height: 50px;
+    cursor: pointer;
+    background: #e60000;
+    color: #fff;
+    border: 2px solid #ff1a1a;
+    border-radius: 5px 0 0 5px;
+    font-weight: bold;
+    font-size: 18px;
+    z-index: 2000;
+    transition: right 0.3s ease;
+}
+
+.tools-panel.hidden + #hideToolsBtn,
+.tools-panel.hidden ~ #hideToolsBtn {
+    right: 0;
+}
+
+.tools-panel.hidden {
+    transform: translateX(100%);
 }
 
 .tools-panel h3 {
@@ -148,29 +238,7 @@ canvas {
     transition: 0.3s;
 }
 
-.tools-panel button:hover,
-.tools-panel input[type=color]:hover {
-    background: #ff1a1a;
-}
-
-input[type=color] {
-    padding: 0;
-    height: 35px;
-}
-
-#textInput {
-    position: absolute;
-    display: none;
-    z-index: 10;
-    border: none;
-    background: #222;
-    color: #fff;
-    padding: 2px;
-    font-size: 16px;
-    outline: none;
-}
-
-/* ----------------- Селектор карт (если нужен фиксированный) ----------------- */
+/* ----------------- Селектор карт ----------------- */
 .map-selector {
     position: fixed;
     left: 10px;
@@ -211,3 +279,26 @@ input[type=color] {
     box-shadow: 0 0 10px #ff1a1a;
 }
 
+.category-title {
+    margin: 50px 0 20px;
+    font-size: 24px;
+    text-align: center;
+    color: #e60000;
+    text-shadow: 0 0 12px #ff1a1a;
+    border-bottom: 2px solid #e60000;
+    padding-bottom: 8px;
+}
+
+/* ----------------- Текстовое поле ----------------- */
+textarea.text-input {
+    position: absolute;
+    z-index: 9999 !important;
+    font-family: Arial, sans-serif;
+    outline: none;
+    border: 1px solid #ccc;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 2px 4px;
+    resize: none;
+    overflow: hidden;
+}

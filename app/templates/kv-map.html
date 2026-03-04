@@ -10,23 +10,63 @@
 
 <header>
     <h1>Карты КВ — Планирование</h1>
-    
     <nav>
         <a href="{{ url_for('home') }}" data-i18n="nav_index">Главная</a>
         <a href="{{ url_for('dashboard') }}">Дашборд</a>
         <a href="{{ url_for('about') }}">О клане</a>
         <a href="#" id="legionBeaconButton">Legion Beacon</a>
     </nav>
-
 </header>
+
 <div id="mapChooseScreen" class="map-choose-screen">
     <h2>Выберите карту</h2>
+
+    <!-- ===== STALCRAFT X ===== -->
+    <h3 class="category-title">Stalcraft X</h3>
     <div class="map-grid">
-        <div class="map-card" onclick="openMap('/static/img/kv_map1.png')"><img src="/static/img/kv_map1.png"><div>Хвойный</div></div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map2.png')"><img src="/static/img/kv_map2.png"><div>Кварталы</div></div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map3.png')"><img src="/static/img/kv_map3.png"><div>Роза Ветров</div></div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map4.png')"><img src="/static/img/kv_map4.png"><div>Малая Бедровка</div></div>
-        <div class="map-card" onclick="openMap('/static/img/kv_map5.png')"><img src="/static/img/kv_map5.png"><div>Низина</div></div>
+        <div class="map-card" onclick="openMap('/static/img/kv_map1.png')">
+            <img src="/static/img/kv_map1.png">
+            <div>Хвойный</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map2.png')">
+            <img src="/static/img/kv_map2.png">
+            <div>Кварталы</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map3.png')">
+            <img src="/static/img/kv_map3.png">
+            <div>Роза Ветров</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map4.png')">
+            <img src="/static/img/kv_map4.png">
+            <div>Малая Бедровка</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/kv_map5.png')">
+            <img src="/static/img/kv_map5.png">
+            <div>Низина</div>
+        </div>
+    </div>
+
+    <!-- ===== ETERNAL CRUSADE RESURRECTION ===== -->
+    <h3 class="category-title">Eternal Crusade Resurrection</h3>
+    <div class="map-grid">
+        <div class="map-card" onclick="openMap('/static/img/ECR_Rage.png')">
+            <img src="/static/img/ECR_Rage.png">
+            <div>Ярость</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/ECR_Nexus.png')">
+            <img src="/static/img/ECR_Nexus.png">
+            <div>Нексус</div>
+        </div>
+
+        <div class="map-card" onclick="openMap('/static/img/ECR_Atonement.png')">
+            <img src="/static/img/ECR_Atonement.png">
+            <div>Искупление</div>
+        </div>
     </div>
 </div>
 
@@ -34,7 +74,8 @@
     <div class="map-container">
         <canvas id="mapCanvas"></canvas>
     </div>
-
+    
+    <button id="hideToolsBtn" title="Скрыть/показать инструменты">&lt;</button>
     <div class="tools-panel">
         <h3>Инструменты</h3>
         <button onclick="setTool('hand')">✋ Перемещение</button>
@@ -42,16 +83,19 @@
         <button onclick="setTool('line')">━ Линия</button>
         <button onclick="setTool('outlineLine')">═ Контурная линия</button>
         <button onclick="setTool('circle')">◯ Круг</button>
+        <button onclick="setTool('rectSelect')">▭ Квадрат</button>
         <button onclick="setTool('arrow')">➤ Стрелка</button>
         <button onclick="setTool('text')">🅰️ Текст</button>
         <button onclick="setTool('attack')">⚔ Атака</button>
         <button onclick="setTool('defense')">🛡 Оборона</button>
+        <button onclick="setTool('tent')">Палатка</button>
+        <button onclick="setTool('recon')">Ралик</button>
 
         <label>Цвет</label>
         <input type="color" id="colorPicker" value="#ff1a1a">
         <label>Толщина</label>
         <input type="range" id="widthPicker" min="1" max="12" value="3">
-
+        <button onclick="setTool('eraser')">🧽 Тёрка</button>
         <button onclick="undoAction()">↩ Назад</button>
         <button onclick="clearCanvas()">Очистить</button>
         <button onclick="saveMap()">Сохранить</button>
@@ -64,166 +108,209 @@
 </div>
 
 <script>
-const chooseScreen=document.getElementById('mapChooseScreen');
-const editorScreen=document.getElementById('editorScreen');
-const canvas=document.getElementById('mapCanvas');
-const ctx=canvas.getContext('2d');
+const chooseScreen = document.getElementById('mapChooseScreen');
+const editorScreen = document.getElementById('editorScreen');
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
 
-let mapImg=new Image();
-let camX=0,camY=0,scale=1;
+const colorPicker = document.getElementById('colorPicker');
+const widthPicker = document.getElementById('widthPicker');
 
-let tool='pen';
-let color='#ff1a1a';
-let lineWidth=3;
+let mapImg = new Image();
+let camX = 0, camY = 0, scale = 1;
 
-let drawing=false,startX=0,startY=0;
-let actions=[],preview=null;
-let isPanning=false,panStart={x:0,y:0};
-let needsRedraw=false;
+let tool = 'pen';
+let color = colorPicker.value;
+let lineWidth = +widthPicker.value;
 
-colorPicker.oninput=e=>color=e.target.value;
-widthPicker.oninput=e=>lineWidth=+e.target.value;
+let drawing = false, startX = 0, startY = 0;
+let actions = [], preview = null;
+let isPanning = false, panStart = {x:0, y:0};
+let needsRedraw = false;
+
+colorPicker.oninput = e => color = e.target.value;
+widthPicker.oninput = e => lineWidth = +e.target.value;
 
 function openMap(src){
-    chooseScreen.style.display='none';
-    editorScreen.style.display='block';
-    mapImg.src=src;
-    mapImg.onload=requestRedraw;
-    actions=[];
-    camX=0;camY=0;scale=1;
+    chooseScreen.style.display = 'none';
+    editorScreen.style.display = 'block';
+    mapImg.src = src;
+    mapImg.onload = requestRedraw;
+    actions = [];
+    camX = 0; camY = 0; scale = 1;
     resizeCanvas();
 }
 
 function backToChoose(){
-    editorScreen.style.display='none';
-    chooseScreen.style.display='block';
+    editorScreen.style.display = 'none';
+    chooseScreen.style.display = 'block';
 }
 
-function setTool(t){tool=t;preview=null;requestRedraw();}
+function setTool(t){ tool = t; preview = null; requestRedraw(); }
 
-canvas.addEventListener('mousedown',e=>{
-    const [x,y]=screenToLogical(e.clientX,e.clientY);
+canvas.addEventListener('mousedown', e => {
+    const [x, y] = screenToLogical(e.clientX, e.clientY);
 
-    if(tool==='hand'){
-        isPanning=true;
-        panStart={x:e.clientX,y:e.clientY};
+    if(tool === 'hand'){
+        isPanning = true;
+        panStart = {x: e.clientX, y: e.clientY};
         return;
     }
 
-    if(tool==='text'){
-        const txt=prompt('Введите текст:');
-        if(txt) actions.push({tool:'text',color,x,y,text:txt});
+    if(tool === 'text'){
+        const txt = prompt('Введите текст:');
+        if(txt) actions.push({tool:'text', color, x, y, text: txt});
+        requestRedraw();
+        return;
+    }
+    
+    if(tool === 'tent' || tool === 'recon'){
+        const img = new Image();
+        img.src = tool === 'tent' ? '/static/img/palat.png' : '/static/img/ralic.png';
+        const size = tool === 'tent' ? 40 : 25; // размер в пикселях, можно подправить
+        actions.push({tool:'image', img, x, y, size});
+        drawing = false;
         requestRedraw();
         return;
     }
 
-    drawing=true;
-    startX=x;startY=y;
+    if(tool === 'eraser'){
+        const eraseRadius = lineWidth * 10; // радиус зоны удаления
+        actions = actions.filter(a => {
+            if(a.tool === 'pen') {
+                return !a.path.some(p => Math.hypot(p.x - x, p.y - y) < eraseRadius);
+            } else if(a.tool === 'line' || a.tool === 'arrow' || a.tool === 'outlineLine') {
+                const dx = Math.min(Math.abs(a.startX - x), Math.abs(a.endX - x));
+                const dy = Math.min(Math.abs(a.startY - y), Math.abs(a.endY - y));
+                return Math.hypot(dx, dy) >= eraseRadius;
+            } else if(a.tool === 'circle') {
+                return Math.hypot(a.cx - x, a.cy - y) >= eraseRadius + a.radius;
+            } else if(a.tool === 'rectSelect') {
+                const inRect = x >= Math.min(a.x1,a.x2) && x <= Math.max(a.x1,a.x2) &&
+                               y >= Math.min(a.y1,a.y2) && y <= Math.max(a.y1,a.y2);
+                return !inRect;
+            } else if(a.tool === 'text' || a.tool === 'icon') {
+                return Math.hypot(a.x - x, a.y - y) >= eraseRadius;
+            }
+            return true;
+        });
+        requestRedraw();
+        return;
+    }
 
-    if(tool==='pen'){
-        actions.push({tool:'pen',color,width:lineWidth,path:[{x,y}]});
-    } else if(tool==='attack'||tool==='defense'){
+    drawing = true;
+    startX = x; startY = y;
+
+    if(tool === 'pen'){
+        actions.push({tool:'pen', color, width: lineWidth, path: [{x,y}]});
+    } else if(tool === 'attack' || tool === 'defense'){
         const icon = tool==='attack'?'⚔':'🛡';
         const size = lineWidth * 10;
-        actions.push({tool:'icon',color,x,y,icon,size});
-        drawing=false;
+        actions.push({tool:'icon', color, x, y, icon, size});
+        drawing = false;
         requestRedraw();
     }
 });
 
-canvas.addEventListener('mousemove',e=>{
-    const [x,y]=screenToLogical(e.clientX,e.clientY);
+canvas.addEventListener('mousemove', e => {
+    const [x, y] = screenToLogical(e.clientX, e.clientY);
 
-    if(tool==='hand'&&isPanning){
-        camX-=(e.clientX-panStart.x)/scale;
-        camY-=(e.clientY-panStart.y)/scale;
-        panStart={x:e.clientX,y:e.clientY};
+    if(tool === 'hand' && isPanning){
+        camX -= (e.clientX - panStart.x) / scale;
+        camY -= (e.clientY - panStart.y) / scale;
+        panStart = {x: e.clientX, y: e.clientY};
         requestRedraw();
         return;
     }
 
     if(!drawing) return;
 
-    if(tool==='pen'){
+    if(tool === 'pen'){
         actions[actions.length-1].path.push({x,y});
+    } else if(tool === 'rectSelect'){
+        const size = Math.max(Math.abs(x-startX), Math.abs(y-startY));
+        const x2 = startX + (x>startX ? size : -size);
+        const y2 = startY + (y>startY ? size : -size);
+        preview = {tool, startX, startY, endX: x2, endY: y2, color, width: lineWidth};
     } else {
-        preview={tool,startX,startY,endX:x,endY:y,color,width:lineWidth};
+        preview = {tool, startX, startY, endX: x, endY: y, color, width: lineWidth};
     }
+
     requestRedraw();
 });
 
-canvas.addEventListener('mouseup', e=>{
+canvas.addEventListener('mouseup', e => {
     if(drawing){
-        drawing=false;
-        const [x,y]=screenToLogical(e.clientX,e.clientY);
+        drawing = false;
+        const [x, y] = screenToLogical(e.clientX, e.clientY);
 
-        if(tool==='line')
-            actions.push({tool:'line',color,width:lineWidth,startX,startY,endX:x,endY:y});
-        if(tool==='arrow')
-            actions.push({tool:'arrow',color,width:lineWidth,startX,startY,endX:x,endY:y});
-        if(tool==='outlineLine')
-            actions.push({tool:'outlineLine',color,width:lineWidth,startX,startY,endX:x,endY:y});
-        if(tool==='circle')
-            actions.push({tool:'circle',color,width:lineWidth,cx:startX,cy:startY,radius:Math.hypot(x-startX,y-startY)});
-        preview=null;
+        if(tool === 'line') actions.push({tool:'line', color, width: lineWidth, startX, startY, endX: x, endY: y});
+        if(tool === 'arrow') actions.push({tool:'arrow', color, width: lineWidth, startX, startY, endX: x, endY: y});
+        if(tool === 'outlineLine') actions.push({tool:'outlineLine', color, width: lineWidth, startX, startY, endX: x, endY: y});
+        if(tool === 'circle') actions.push({tool:'circle', color, width: lineWidth, cx: startX, cy: startY, radius: Math.hypot(x-startX, y-startY)});
+        if(tool === 'rectSelect'){
+            const size = Math.max(Math.abs(x-startX), Math.abs(y-startY));
+            const x2 = startX + (x>startX ? size : -size);
+            const y2 = startY + (y>startY ? size : -size);
+            actions.push({tool:'rectSelect', color, width: lineWidth, x1: startX, y1: startY, x2, y2});
+        }
+
+        preview = null;
     }
-    isPanning=false;
+    isPanning = false;
     requestRedraw();
 });
 
-canvas.addEventListener('wheel',e=>{
+canvas.addEventListener('wheel', e => {
     e.preventDefault();
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left;
-    const my=e.clientY-rect.top;
-    const wx=camX+mx/scale;
-    const wy=camY+my/scale;
-    const f=e.deltaY<0?1.1:1/1.1;
-    scale*=f;
-    camX=wx-mx/scale;
-    camY=wy-my/scale;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const wx = camX + mx / scale;
+    const wy = camY + my / scale;
+    const f = e.deltaY < 0 ? 1.1 : 1/1.1;
+    scale *= f;
+    camX = wx - mx / scale;
+    camY = wy - my / scale;
     requestRedraw();
 });
 
-function screenToLogical(sx,sy){
-    const r=canvas.getBoundingClientRect();
-    return[(sx-r.left)/scale+camX,(sy-r.top)/scale+camY];
+function screenToLogical(sx, sy){
+    const r = canvas.getBoundingClientRect();
+    return [(sx-r.left)/scale + camX, (sy-r.top)/scale + camY];
 }
 
 function getOffsets(){
-    const cr=canvas.width/canvas.height;
-    const mr=mapImg.width/mapImg.height;
-    let x=0,y=0,w,h;
-    if(mr>cr){w=canvas.width;h=w/mr;y=(canvas.height-h)/2;}
-    else{h=canvas.height;w=h*mr;x=(canvas.width-w)/2;}
-    return{x,y,w,h};
+    const cr = canvas.width / canvas.height;
+    const mr = mapImg.width / mapImg.height;
+    let x=0, y=0, w, h;
+    if(mr>cr){ w=canvas.width; h=w/mr; y=(canvas.height-h)/2; }
+    else{ h=canvas.height; w=h*mr; x=(canvas.width-w)/2; }
+    return {x,y,w,h};
 }
 
 function style(col,w){
-    ctx.strokeStyle=col;
-    ctx.fillStyle=col;
-    ctx.lineWidth=w*scale;
-    ctx.lineCap='round';
+    ctx.strokeStyle = col;
+    ctx.fillStyle = col;
+    ctx.lineWidth = w*scale;
+    ctx.lineCap = 'round';
 }
 
-function arrow(x1, y1, x2, y2, col, w) {
+function arrow(x1,y1,x2,y2,col,w){
     const head = 20;
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const a = Math.atan2(dy, dx);
-    const lineEndX = x2 - head * Math.cos(a);
-    const lineEndY = y2 - head * Math.sin(a);
-
-    style(col, w);
+    const dx = x2-x1, dy=y2-y1;
+    const a = Math.atan2(dy,dx);
+    const lineEndX = x2 - head*Math.cos(a);
+    const lineEndY = y2 - head*Math.sin(a);
+    style(col,w);
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(lineEndX, lineEndY);
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(lineEndX,lineEndY);
     ctx.stroke();
-
     ctx.beginPath();
-    ctx.moveTo(x2, y2);
-    ctx.lineTo(x2 - head * Math.cos(a - Math.PI / 6), y2 - head * Math.sin(a - Math.PI / 6));
-    ctx.lineTo(x2 - head * Math.cos(a + Math.PI / 6), y2 - head * Math.sin(a + Math.PI / 6));
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2 - head*Math.cos(a-Math.PI/6), y2 - head*Math.sin(a-Math.PI/6));
+    ctx.lineTo(x2 - head*Math.cos(a+Math.PI/6), y2 - head*Math.sin(a+Math.PI/6));
     ctx.closePath();
     ctx.fillStyle = col;
     ctx.fill();
@@ -233,7 +320,7 @@ function drawDashedLine(a){
     ctx.save();
     ctx.strokeStyle = a.color;
     ctx.lineWidth = a.width*scale;
-    ctx.setLineDash([10*scale, 5*scale]); // длина линии и промежуток
+    ctx.setLineDash([10*scale, 5*scale]);
     ctx.beginPath();
     ctx.moveTo(a.startX,a.startY);
     ctx.lineTo(a.endX,a.endY);
@@ -248,113 +335,64 @@ function redraw(){
 
     const o=getOffsets();
     ctx.setTransform(scale,0,0,scale,-camX*scale,-camY*scale);
-    ctx.drawImage(mapImg,o.x,o.y,o.w,o.h);
+    ctx.drawImage(mapImg, o.x, o.y, o.w, o.h);
 
     for(const a of actions){
-        if(a.tool==='line'){
-            ctx.strokeStyle=a.color;
-            ctx.lineWidth=a.width*scale;
-            ctx.beginPath();
-            ctx.moveTo(a.startX,a.startY);
-            ctx.lineTo(a.endX,a.endY);
-            ctx.stroke();
-        }
-        if(a.tool==='outlineLine'){
-            drawDashedLine(a);
-        }
-        if(a.tool==='circle'){
-            ctx.strokeStyle=a.color;
-            ctx.lineWidth=a.width*scale;
-            ctx.beginPath();
-            ctx.arc(a.cx,a.cy,a.radius,0,2*Math.PI);
-            ctx.stroke();
-        }
+        if(a.tool==='line'){ style(a.color,a.width); ctx.beginPath(); ctx.moveTo(a.startX,a.startY); ctx.lineTo(a.endX,a.endY); ctx.stroke(); }
+        if(a.tool==='outlineLine') drawDashedLine(a);
+        if(a.tool==='circle'){ style(a.color,a.width); ctx.beginPath(); ctx.arc(a.cx,a.cy,a.radius,0,2*Math.PI); ctx.stroke(); }
         if(a.tool==='arrow') arrow(a.startX,a.startY,a.endX,a.endY,a.color,a.width);
-        if(a.tool==='pen'){
-            ctx.strokeStyle=a.color;
-            ctx.lineWidth=a.width*scale;
-            ctx.beginPath();
-            ctx.moveTo(a.path[0].x,a.path[0].y);
-            for(let i=1;i<a.path.length;i++) ctx.lineTo(a.path[i].x,a.path[i].y);
-            ctx.stroke();
-        }
-        if(a.tool==='text'){
-            ctx.fillStyle=a.color;
-            ctx.font=`${20*scale}px Arial`;
-            ctx.fillText(a.text,a.x,a.y);
-        }
-        if(a.tool==='icon'){
-            ctx.font = `${a.size*scale}px Arial`;
-            ctx.fillStyle = a.color;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(a.icon, a.x, a.y);
-        }
+        if(a.tool==='pen'){ style(a.color,a.width); ctx.beginPath(); ctx.moveTo(a.path[0].x,a.path[0].y); for(let i=1;i<a.path.length;i++) ctx.lineTo(a.path[i].x,a.path[i].y); ctx.stroke(); }
+        if(a.tool==='rectSelect'){ style(a.color,a.width); ctx.strokeRect(a.x1,a.y1,a.x2-a.x1,a.y2-a.y1); }
+        if(a.tool==='text'){ ctx.fillStyle=a.color; ctx.font=`${20*scale}px Arial`; ctx.fillText(a.text,a.x,a.y); }
+        if(a.tool==='icon'){ ctx.font=`${a.size*scale}px Arial`; ctx.fillStyle=a.color; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(a.icon,a.x,a.y); }
+        if(a.tool === 'image'){
+    ctx.drawImage(a.img, a.x - a.size/2, a.y - a.size/2, a.size, a.size);
+}
     }
 
     if(preview){
-        if(preview.tool==='line'){
-            ctx.strokeStyle=preview.color;
-            ctx.lineWidth=preview.width*scale;
-            ctx.beginPath();
-            ctx.moveTo(preview.startX,preview.startY);
-            ctx.lineTo(preview.endX,preview.endY);
-            ctx.stroke();
-        }
-        if(preview.tool==='outlineLine'){
-            drawDashedLine(preview);
-        }
-        if(preview.tool==='circle'){
-            ctx.strokeStyle=preview.color;
-            ctx.lineWidth=preview.width*scale;
-            ctx.beginPath();
-            ctx.arc(preview.startX,preview.startY,
-                Math.hypot(preview.endX-preview.startX,preview.endY-preview.startY),
-                0,2*Math.PI);
-            ctx.stroke();
-        }
-        if(preview.tool==='arrow')
-            arrow(preview.startX,preview.startY,preview.endX,preview.endY,preview.color,preview.width);
+        if(preview.tool==='line'){ style(preview.color,preview.width); ctx.beginPath(); ctx.moveTo(preview.startX,preview.startY); ctx.lineTo(preview.endX,preview.endY); ctx.stroke(); }
+        if(preview.tool==='outlineLine') drawDashedLine(preview);
+        if(preview.tool==='circle'){ style(preview.color,preview.width); ctx.beginPath(); ctx.arc(preview.startX,preview.startY,Math.hypot(preview.endX-preview.startX,preview.endY-preview.startY),0,2*Math.PI); ctx.stroke(); }
+        if(preview.tool==='arrow') arrow(preview.startX,preview.startY,preview.endX,preview.endY,preview.color,preview.width);
+        if(preview.tool==='rectSelect'){ style(preview.color,preview.width); ctx.strokeRect(preview.startX,preview.startY,preview.endX-preview.startX,preview.endY-preview.startY); }
     }
 }
 
 function requestRedraw(){
-    if(!needsRedraw){
-        needsRedraw=true;
-        requestAnimationFrame(()=>{redraw();needsRedraw=false;});
-    }
+    if(!needsRedraw){ needsRedraw = true; requestAnimationFrame(()=>{redraw(); needsRedraw=false;}); }
 }
 
 function resizeCanvas(){
-    const c=document.querySelector('.map-container');
-    canvas.width=c.clientWidth;
-    canvas.height=c.clientHeight;
+    const c = document.querySelector('.map-container');
+    canvas.width = c.clientWidth;
+    canvas.height = c.clientHeight;
     requestRedraw();
 }
-window.addEventListener('resize',resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
 
-function clearCanvas(){actions=[];requestRedraw();}
-function undoAction(){actions.pop();requestRedraw();}
+function clearCanvas(){ actions=[]; requestRedraw(); }
+function undoAction(){ actions.pop(); requestRedraw(); }
+function exportPNG(){ const a=document.createElement('a'); a.download='tactic.png'; a.href=canvas.toDataURL(); a.click(); }
+function saveMap(){ const data="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(actions)); const a=document.createElement('a'); a.href=data; a.download="map_tactic.json"; a.click(); }
+function loadMap(){ fileLoader.click(); }
+function handleFile(e){ const r=new FileReader(); r.onload=ev=>{ actions=JSON.parse(ev.target.result); requestRedraw(); }; r.readAsText(e.target.files[0]); }
 
-function exportPNG(){
-    const a=document.createElement('a');
-    a.download='tactic.png';
-    a.href=canvas.toDataURL();
-    a.click();
-}
+const hideToolsBtn = document.getElementById('hideToolsBtn');
+const toolsPanel = document.querySelector('.tools-panel');
+let toolsHidden = false;
+hideToolsBtn.addEventListener('click', () => {
+    toolsPanel.classList.toggle('hidden');
 
-function saveMap(){
-    const data="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(actions));
-    const a=document.createElement('a');
-    a.href=data;a.download="map_tactic.json";a.click();
-}
-
-function loadMap(){fileLoader.click();}
-function handleFile(e){
-    const r=new FileReader();
-    r.onload=ev=>{actions=JSON.parse(ev.target.result);requestRedraw();}
-    r.readAsText(e.target.files[0]);
-}
+    if (toolsPanel.classList.contains('hidden')) {
+        hideToolsBtn.style.right = "0px";
+        hideToolsBtn.innerHTML = ">";
+    } else {
+        hideToolsBtn.style.right = "170px";
+        hideToolsBtn.innerHTML = "<";
+    }
+});
 </script>
 
 </body>
