@@ -6,21 +6,21 @@ html, body {
     font-family: 'UnifrakturCook', cursive;
     background-color: #000;
     color: #fff;
-    overflow: hidden; /* Чтобы основной скролл не мешал Edge */
+    overflow: hidden;
 }
 
 /* ----------------- Скролл внутри выбора карты ----------------- */
 .map-choose-screen {
-    height: 100vh;             
-    box-sizing: border-box;     
+    height: 100vh;
+    box-sizing: border-box;
     padding: 40px;
     text-align: center;
-    overflow-y: auto;           
+    overflow-y: auto;
     overflow-x: hidden;
 
-    scrollbar-width: thin;      
+    scrollbar-width: thin;
     scrollbar-color: #e60000 #111;
-    -ms-overflow-style: auto;   
+    -ms-overflow-style: auto;
 }
 
 .map-choose-screen::-webkit-scrollbar {
@@ -48,7 +48,7 @@ html, body {
     box-shadow: 0 0 15px #ff1a1a;
 }
 
-/* ----------------- Шапка и навигация ----------------- */
+/* ----------------- Шапка ----------------- */
 header {
     display: flex;
     justify-content: space-between;
@@ -88,14 +88,14 @@ nav a.active {
     box-shadow: 0 0 20px #ff1a1a;
 }
 
-/* ----------------- Экран выбора карты ----------------- */
+/* ----------------- Карты ----------------- */
 .map-choose-screen h2 {
     font-size: 36px;
     color: #e60000;
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-bottom: 40px;
-    text-shadow: 
+    text-shadow:
         0 0 10px #e60000,
         0 0 25px #ff1a1a;
 }
@@ -119,14 +119,12 @@ nav a.active {
     border: 2px solid #e60000;
 }
 
-/* Наведение */
 .map-card:hover {
     transform: translateY(-6px) scale(1.05);
     box-shadow: 0 0 25px #ff1a1a, 0 8px 30px rgba(255,26,26,0.6);
     border-color: #ff1a1a;
 }
 
-/* Выбранная карта */
 .map-card.selected {
     transform: translateY(-6px) scale(1.05);
     box-shadow: 0 0 30px #ff1a1a, 0 8px 30px rgba(255,26,26,0.6);
@@ -154,7 +152,7 @@ nav a.active {
     background: #1a1a1a;
 }
 
-/* ----------------- Канвас и панель инструментов ----------------- */
+/* ----------------- Canvas ----------------- */
 .map-container {
     position: relative;
     width: 100%;
@@ -170,33 +168,27 @@ canvas {
 /* ----------------- Панель инструментов ----------------- */
 #toolsWrapper {
     position: fixed;
-    top: 70px;        /* чуть ниже шапки */
+    top: 70px;
     right: 0;
-    bottom: 10px;     /* до низа экрана */
+    bottom: 10px;
     width: 170px;
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); /* плавная анимация */
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
 }
 
 .tools-panel {
-    flex: 1;           /* растягиваем на весь доступный height */
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;          /* расстояние между кнопками */
+    gap: 6px;
     padding: 15px;
     background: #1a1a1a;
     border: 2px solid #e60000;
     border-radius: 10px 0 0 10px;
-    overflow-y: auto;  /* скролл, если кнопок слишком много */
+    overflow-y: auto;
     box-shadow: 0 0 20px #e60000;
-    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
-}
-
-.tools-panel.hidden {
-    transform: translateX(100%);
-    opacity: 0.85;
 }
 
 .tools-panel h3 {
@@ -206,6 +198,7 @@ canvas {
     text-shadow: 0 0 10px #e60000;
 }
 
+/* ----------------- Кнопки ----------------- */
 .tools-panel button,
 .tools-panel input[type=color] {
     width: 100%;
@@ -216,23 +209,48 @@ canvas {
     background: #e60000;
     color: #fff;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
+    position: relative;
 }
 
-/* Наведение и выбранная кнопка */
-.tools-panel button:hover,
-.tools-panel button.selected {
+/* Hover */
+.tools-panel button:hover {
     background: #ff1a1a;
     color: #000;
-    transform: scale(1.05);
-    box-shadow: 0 0 15px #ff1a1a;
+    transform: scale(1.04);
 }
 
+/* ----------------- АКТИВНЫЙ ИНСТРУМЕНТ ----------------- */
+.tools-panel button.selected {
+
+    background: #ff1a1a;
+    color: #000;
+
+    transform: scale(1.06);
+
+    box-shadow:
+        0 0 18px #ff1a1a,
+        inset 0 0 10px rgba(0,0,0,0.5);
+
+    border-left: 6px solid #ffffff;
+
+    padding-left: 20px;
+}
+
+/* стрелка */
+.tools-panel button.selected::before {
+    content: "►";
+    position: absolute;
+    left: 5px;
+    font-weight: bold;
+}
+
+/* color picker */
 .tools-panel input[type=color]:hover {
     box-shadow: 0 0 10px #ff1a1a;
 }
 
-/* Скролл панели */
+/* скролл */
 .tools-panel::-webkit-scrollbar {
     width: 5px;
 }
@@ -242,11 +260,11 @@ canvas {
     border-radius: 3px;
 }
 
-/* ----------------- Кнопка скрытия панели ----------------- */
+/* ----------------- Кнопка скрытия ----------------- */
 #hideToolsBtn {
     position: fixed;
-    top: 90px; 
-    right: 170px; /* изначально стоит справа от панели */
+    top: 90px;
+    right: 170px;
     width: 25px;
     height: 50px;
     font-size: 18px;
@@ -257,17 +275,15 @@ canvas {
     cursor: pointer;
     box-shadow: 0 0 10px #ff1a1a;
     z-index: 2000;
-    transition: right 0.4s cubic-bezier(0.4,0,0.2,1); /* плавное смещение */
+    transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* При скрытой панели кнопка выезжает на край экрана */
 #toolsWrapper.hidden ~ #hideToolsBtn {
     right: 0;
 }
 
-/* Анимация скрытия панели */
 #toolsWrapper.hidden {
-    transform: translateX(170px); /* двигаем весь wrapper вправо */
+    transform: translateX(170px);
     opacity: 0.85;
 }
 
@@ -301,10 +317,6 @@ canvas {
     border: 1px solid #e60000;
     border-radius: 5px;
     padding: 5px 8px;
-    font-size: 14px;
-    font-weight: normal;
-    cursor: pointer;
-    transition: all 0.3s ease;
 }
 
 .map-selector select:hover,
@@ -313,23 +325,7 @@ canvas {
     box-shadow: 0 0 12px #ff1a1a;
 }
 
-/* Подсветка выбранного option через атрибут selected */
-.map-selector select option[selected] {
-    background-color: #ff1a1a;
-    color: #000;
-}
-
-.category-title {
-    margin: 50px 0 20px;
-    font-size: 24px;
-    text-align: center;
-    color: #e60000;
-    text-shadow: 0 0 12px #ff1a1a;
-    border-bottom: 2px solid #e60000;
-    padding-bottom: 8px;
-}
-
-/* ----------------- Текстовое поле ----------------- */
+/* ----------------- Текст ----------------- */
 textarea.text-input {
     position: absolute;
     z-index: 9999 !important;

@@ -78,24 +78,24 @@
 <div id="toolsWrapper">
     <div class="tools-panel">
         <h3>Инструменты</h3>
-        <button onclick="setTool('hand')">✋ Перемещение</button>
-        <button onclick="setTool('pen')">✏ Карандаш</button>
-        <button onclick="setTool('line')">━ Линия</button>
-        <button onclick="setTool('outlineLine')">═ Контурная линия</button>
-        <button onclick="setTool('circle')">◯ Круг</button>
-        <button onclick="setTool('rectSelect')">▭ Квадрат</button>
-        <button onclick="setTool('arrow')">➤ Стрелка</button>
-        <button onclick="setTool('text')">🅰️ Текст</button>
-        <button onclick="setTool('attack')">⚔ Атака</button>
-        <button onclick="setTool('defense')">🛡 Оборона</button>
-        <button onclick="setTool('tent')">Палатка</button>
-        <button onclick="setTool('recon')">Ралик</button>
+        <button data-tool="hand" onclick="setTool('hand')">✋ Перемещение</button>
+        <button data-tool="pen" onclick="setTool('pen')">✏ Карандаш</button>
+        <button data-tool="line" onclick="setTool('line')">━ Линия</button>
+        <button data-tool="outlineLine" onclick="setTool('outlineLine')">═ Контурная линия</button>
+        <button data-tool="circle" onclick="setTool('circle')">◯ Круг</button>
+        <button data-tool="rectSelect" onclick="setTool('rectSelect')">▭ Квадрат</button>
+        <button data-tool="arrow" onclick="setTool('arrow')">➤ Стрелка</button>
+        <button data-tool="text" onclick="setTool('text')">🅰️ Текст</button>
+        <button data-tool="attack" onclick="setTool('attack')">⚔ Атака</button>
+        <button data-tool="defense" onclick="setTool('defense')">🛡 Оборона</button>
+        <button data-tool="tent" onclick="setTool('tent')">Палатка</button>
+        <button data-tool="recon" onclick="setTool('recon')">Ралик</button>
+        <button data-tool="eraser" onclick="setTool('eraser')">🧽 Тёрка</button>
 
         <label>Цвет</label>
         <input type="color" id="colorPicker" value="#ff1a1a">
         <label>Толщина</label>
         <input type="range" id="widthPicker" min="1" max="12" value="3">
-        <button onclick="setTool('eraser')">🧽 Тёрка</button>
         <button onclick="undoAction()">↩ Назад</button>
         <button onclick="clearCanvas()">Очистить</button>
         <button onclick="saveMap()">Сохранить</button>
@@ -179,35 +179,46 @@ canvas.addEventListener('mousedown', e => {
         return;
     }
 
-    if(tool === 'eraser'){
-        const eraseRadius = lineWidth * 10;
-        for(let i = 0; i < actions.length; i++){
-            const a = actions[i];
-            let hit = false;
+   if(tool === 'eraser'){
+       for(let i = actions.length - 1; i >= 0; i--){ // идём с конца, чтобы удалять последний нарисованный элемент
+           const a = actions[i];
+           let hit = false;
 
-            if(a.tool === 'pen') {
-                hit = a.path.some(p => Math.hypot(p.x - x, p.y - y) < eraseRadius);
-            } else if(a.tool === 'line' || a.tool === 'arrow' || a.tool === 'outlineLine') {
-                const dx = Math.min(Math.abs(a.startX - x), Math.abs(a.endX - x));
-                const dy = Math.min(Math.abs(a.startY - y), Math.abs(a.endY - y));
-                hit = Math.hypot(dx, dy) < eraseRadius;
-            } else if(a.tool === 'circle') {
-                hit = Math.hypot(a.cx - x, a.cy - y) < eraseRadius + a.radius;
-            } else if(a.tool === 'rectSelect') {
-                hit = x >= Math.min(a.x1,a.x2) && x <= Math.max(a.x1,a.x2) &&
-                      y >= Math.min(a.y1,a.y2) && y <= Math.max(a.y1,a.y2);
-            } else if(a.tool === 'text' || a.tool === 'icon' || a.tool === 'image') {
-                hit = Math.hypot(a.x - x, a.y - y) < eraseRadius;
-            }
+           switch(a.tool){
+               case 'pen':
+                // Если курсор попадает точно на одну точку пути
+                   hit = a.path.some(p => Math.abs(p.x - x) < 1 && Math.abs(p.y - y) < 1);
+                   break;
+               case 'line':
+               case 'arrow':
+               case 'outlineLine':
+                // Проверяем попадание по bounding box линии
+                   hit = pointToLineDist(x, y, a.startX, a.startY, a.endX, a.endY) <= 5; // 5 — "толщина" зоны ластика
+                   break;
+               case 'circle':
+                   hit = Math.hypot(a.cx - x, a.cy - y) <= a.radius;
+                   break;
+               case 'rectSelect':
+                   hit = x >= Math.min(a.x1,a.x2) && x <= Math.max(a.x1,a.x2) &&
+                         y >= Math.min(a.y1,a.y2) && y <= Math.max(a.y1,a.y2);
+                   break;
+               case 'text':
+               case 'icon':
+               case 'image':
+                // Попадание по прямоугольнику, исходя из размера
+                   const half = (a.size || 20)/2;
+                   hit = x >= a.x-half && x <= a.x+half && y >= a.y-half && y <= a.y+half;
+                   break;
+           }
 
-            if(hit){
-                actions.splice(i, 1);  // удаляем только первый найденный элемент
-                break;                // прекращаем цикл
-            }
+        if(hit){
+            actions.splice(i, 1);  // удаляем **только первый найденный элемент**
+            break;
         }
-        requestRedraw();
-        return;
     }
+    requestRedraw();
+    return;
+}
 
     drawing = true;
     startX = x; startY = y;
@@ -308,24 +319,31 @@ function style(col,w){
     ctx.lineCap = 'round';
 }
 
-function arrow(x1,y1,x2,y2,col,w){
-    const head = 20;
-    const dx = x2-x1, dy=y2-y1;
-    const a = Math.atan2(dy,dx);
-    const lineEndX = x2 - head*Math.cos(a);
-    const lineEndY = y2 - head*Math.sin(a);
-    style(col,w);
+function arrow(x1, y1, x2, y2, col, w) {
+    const head = 20; // длина стрелки
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+
+    // Стиль основной линии
+    ctx.lineWidth = w*scale;
+    ctx.strokeStyle = col;
     ctx.beginPath();
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(lineEndX,lineEndY);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2 - head*Math.cos(angle), y2 - head*Math.sin(angle));
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x2,y2);
-    ctx.lineTo(x2 - head*Math.cos(a-Math.PI/6), y2 - head*Math.sin(a-Math.PI/6));
-    ctx.lineTo(x2 - head*Math.cos(a+Math.PI/6), y2 - head*Math.sin(a+Math.PI/6));
-    ctx.closePath();
+
+    // Стрелка
     ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head*Math.cos(angle - Math.PI/6), y2 - head*Math.sin(angle - Math.PI/6));
+    ctx.lineTo(x2 - head*Math.cos(angle + Math.PI/6), y2 - head*Math.sin(angle + Math.PI/6));
+    ctx.closePath();
     ctx.fill();
+
+    // Контур стрелки (опционально)
+    ctx.strokeStyle = "#000"; // цвет контура
+    ctx.lineWidth = 2*scale;
+    ctx.stroke();
 }
 
 function drawDashedLine(a){
@@ -384,6 +402,25 @@ function resizeCanvas(){
 }
 window.addEventListener('resize', resizeCanvas);
 
+function pointToLineDist(px, py, x1, y1, x2, y2){
+    const A = px - x1;
+    const B = py - y1;
+    const C = x2 - x1;
+    const D = y2 - y1;
+
+    const dot = A*C + B*D;
+    const len_sq = C*C + D*D;
+    let param = -1;
+    if(len_sq !== 0) param = dot / len_sq;
+
+    let xx, yy;
+    if(param < 0){ xx = x1; yy = y1; }
+    else if(param > 1){ xx = x2; yy = y2; }
+    else { xx = x1 + param*C; yy = y1 + param*D; }
+
+    return Math.hypot(px - xx, py - yy);
+}
+
 function clearCanvas(){ actions=[]; requestRedraw(); }
 function undoAction(){ actions.pop(); requestRedraw(); }
 function exportPNG(){ const a=document.createElement('a'); a.download='tactic.png'; a.href=canvas.toDataURL(); a.click(); }
@@ -411,6 +448,8 @@ document.querySelectorAll('.tools-panel button[data-tool]').forEach(btn => {
         btn.classList.add('selected');
     });
 });
+
+document.querySelector('[data-tool="pen"]').classList.add('selected');
 
 // Выделение выбранной карты
 document.querySelectorAll('.map-card').forEach(card => {
