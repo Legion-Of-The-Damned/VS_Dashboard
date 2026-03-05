@@ -11,19 +11,18 @@ html, body {
 
 /* ----------------- Скролл внутри выбора карты ----------------- */
 .map-choose-screen {
-    height: 100vh;             /* Полный экран */
-    box-sizing: border-box;     /* padding учитывается */
+    height: 100vh;             
+    box-sizing: border-box;     
     padding: 40px;
     text-align: center;
-    overflow-y: auto;           /* вертикальная прокрутка */
+    overflow-y: auto;           
     overflow-x: hidden;
 
-    scrollbar-width: thin;      /* Firefox */
+    scrollbar-width: thin;      
     scrollbar-color: #e60000 #111;
-    -ms-overflow-style: auto;   /* Edge */
+    -ms-overflow-style: auto;   
 }
 
-/* Webkit скролл для Chrome, Edge, Safari */
 .map-choose-screen::-webkit-scrollbar {
     width: 8px;
 }
@@ -120,9 +119,17 @@ nav a.active {
     border: 2px solid #e60000;
 }
 
+/* Наведение */
 .map-card:hover {
     transform: translateY(-6px) scale(1.05);
     box-shadow: 0 0 25px #ff1a1a, 0 8px 30px rgba(255,26,26,0.6);
+    border-color: #ff1a1a;
+}
+
+/* Выбранная карта */
+.map-card.selected {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 0 30px #ff1a1a, 0 8px 30px rgba(255,26,26,0.6);
     border-color: #ff1a1a;
 }
 
@@ -160,61 +167,36 @@ canvas {
     display: block;
 }
 
-/* Панель инструментов */
-.tools-panel {
+/* ----------------- Панель инструментов ----------------- */
+#toolsWrapper {
     position: fixed;
-    top: 70px;
+    top: 70px;        /* чуть ниже шапки */
     right: 0;
+    bottom: 10px;     /* до низа экрана */
+    width: 170px;
     z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); /* плавная анимация */
+}
+
+.tools-panel {
+    flex: 1;           /* растягиваем на весь доступный height */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;          /* расстояние между кнопками */
+    padding: 15px;
     background: #1a1a1a;
     border: 2px solid #e60000;
     border-radius: 10px 0 0 10px;
-    padding: 15px;
+    overflow-y: auto;  /* скролл, если кнопок слишком много */
     box-shadow: 0 0 20px #e60000;
-    width: 170px;
-    height: calc(100% - 80px);
-    transition: transform 0.3s ease;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.tools-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.tools-panel::-webkit-scrollbar-thumb {
-    background: #e60000;
-    border-radius: 4px;
-}
-
-.tools-panel::-webkit-scrollbar-thumb:hover {
-    background: #ff1a1a;
-}
-
-#hideToolsBtn {
-    position: fixed;
-    top: 120px;
-    right: 170px;
-    width: 25px;
-    height: 50px;
-    cursor: pointer;
-    background: #e60000;
-    color: #fff;
-    border: 2px solid #ff1a1a;
-    border-radius: 5px 0 0 5px;
-    font-weight: bold;
-    font-size: 18px;
-    z-index: 2000;
-    transition: right 0.3s ease;
-}
-
-.tools-panel.hidden + #hideToolsBtn,
-.tools-panel.hidden ~ #hideToolsBtn {
-    right: 0;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
 }
 
 .tools-panel.hidden {
     transform: translateX(100%);
+    opacity: 0.85;
 }
 
 .tools-panel h3 {
@@ -227,15 +209,66 @@ canvas {
 .tools-panel button,
 .tools-panel input[type=color] {
     width: 100%;
-    margin-bottom: 8px;
-    padding: 8px 0;
-    background: #e60000;
-    color: #fff;
+    padding: 6px 0;
+    font-size: 13px;
     border: none;
     border-radius: 5px;
+    background: #e60000;
+    color: #fff;
     cursor: pointer;
-    font-size: 14px;
-    transition: 0.3s;
+    transition: all 0.3s ease;
+}
+
+/* Наведение и выбранная кнопка */
+.tools-panel button:hover,
+.tools-panel button.selected {
+    background: #ff1a1a;
+    color: #000;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #ff1a1a;
+}
+
+.tools-panel input[type=color]:hover {
+    box-shadow: 0 0 10px #ff1a1a;
+}
+
+/* Скролл панели */
+.tools-panel::-webkit-scrollbar {
+    width: 5px;
+}
+
+.tools-panel::-webkit-scrollbar-thumb {
+    background: #ff1a1a;
+    border-radius: 3px;
+}
+
+/* ----------------- Кнопка скрытия панели ----------------- */
+#hideToolsBtn {
+    position: fixed;
+    top: 90px; 
+    right: 170px; /* изначально стоит справа от панели */
+    width: 25px;
+    height: 50px;
+    font-size: 18px;
+    background: #e60000;
+    border: 2px solid #ff1a1a;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 10px #ff1a1a;
+    z-index: 2000;
+    transition: right 0.4s cubic-bezier(0.4,0,0.2,1); /* плавное смещение */
+}
+
+/* При скрытой панели кнопка выезжает на край экрана */
+#toolsWrapper.hidden ~ #hideToolsBtn {
+    right: 0;
+}
+
+/* Анимация скрытия панели */
+#toolsWrapper.hidden {
+    transform: translateX(170px); /* двигаем весь wrapper вправо */
+    opacity: 0.85;
 }
 
 /* ----------------- Селектор карт ----------------- */
@@ -274,9 +307,16 @@ canvas {
     transition: all 0.3s ease;
 }
 
-.map-selector select:hover {
+.map-selector select:hover,
+.map-selector select:focus {
     border-color: #ff1a1a;
-    box-shadow: 0 0 10px #ff1a1a;
+    box-shadow: 0 0 12px #ff1a1a;
+}
+
+/* Подсветка выбранного option через атрибут selected */
+.map-selector select option[selected] {
+    background-color: #ff1a1a;
+    color: #000;
 }
 
 .category-title {

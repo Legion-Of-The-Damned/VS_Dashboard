@@ -75,7 +75,7 @@
         <canvas id="mapCanvas"></canvas>
     </div>
     
-    <button id="hideToolsBtn" title="Скрыть/показать инструменты">&lt;</button>
+<div id="toolsWrapper">
     <div class="tools-panel">
         <h3>Инструменты</h3>
         <button onclick="setTool('hand')">✋ Перемещение</button>
@@ -105,7 +105,10 @@
 
         <input type="file" id="fileLoader" style="display:none;" onchange="handleFile(event)">
     </div>
+
 </div>
+
+<button id="hideToolsBtn">&lt;</button>
 
 <script>
 const chooseScreen = document.getElementById('mapChooseScreen');
@@ -151,12 +154,14 @@ function setTool(t){ tool = t; preview = null; requestRedraw(); }
 canvas.addEventListener('mousedown', e => {
     const [x, y] = screenToLogical(e.clientX, e.clientY);
 
-    if(tool === 'hand'){
+    // Правая кнопка или инструмент "hand" = пани́рование
+    if(e.button === 2 || tool === 'hand'){
         isPanning = true;
         panStart = {x: e.clientX, y: e.clientY};
         return;
     }
 
+    // Остальной код для инструментов
     if(tool === 'text'){
         const txt = prompt('Введите текст:');
         if(txt) actions.push({tool:'text', color, x, y, text: txt});
@@ -167,7 +172,7 @@ canvas.addEventListener('mousedown', e => {
     if(tool === 'tent' || tool === 'recon'){
         const img = new Image();
         img.src = tool === 'tent' ? '/static/img/palat.png' : '/static/img/ralic.png';
-        const size = tool === 'tent' ? 40 : 25; // размер в пикселях, можно подправить
+        const size = tool === 'tent' ? 40 : 25;
         actions.push({tool:'image', img, x, y, size});
         drawing = false;
         requestRedraw();
@@ -175,25 +180,31 @@ canvas.addEventListener('mousedown', e => {
     }
 
     if(tool === 'eraser'){
-        const eraseRadius = lineWidth * 10; // радиус зоны удаления
-        actions = actions.filter(a => {
+        const eraseRadius = lineWidth * 10;
+        for(let i = 0; i < actions.length; i++){
+            const a = actions[i];
+            let hit = false;
+
             if(a.tool === 'pen') {
-                return !a.path.some(p => Math.hypot(p.x - x, p.y - y) < eraseRadius);
+                hit = a.path.some(p => Math.hypot(p.x - x, p.y - y) < eraseRadius);
             } else if(a.tool === 'line' || a.tool === 'arrow' || a.tool === 'outlineLine') {
                 const dx = Math.min(Math.abs(a.startX - x), Math.abs(a.endX - x));
                 const dy = Math.min(Math.abs(a.startY - y), Math.abs(a.endY - y));
-                return Math.hypot(dx, dy) >= eraseRadius;
+                hit = Math.hypot(dx, dy) < eraseRadius;
             } else if(a.tool === 'circle') {
-                return Math.hypot(a.cx - x, a.cy - y) >= eraseRadius + a.radius;
+                hit = Math.hypot(a.cx - x, a.cy - y) < eraseRadius + a.radius;
             } else if(a.tool === 'rectSelect') {
-                const inRect = x >= Math.min(a.x1,a.x2) && x <= Math.max(a.x1,a.x2) &&
-                               y >= Math.min(a.y1,a.y2) && y <= Math.max(a.y1,a.y2);
-                return !inRect;
-            } else if(a.tool === 'text' || a.tool === 'icon') {
-                return Math.hypot(a.x - x, a.y - y) >= eraseRadius;
+                hit = x >= Math.min(a.x1,a.x2) && x <= Math.max(a.x1,a.x2) &&
+                      y >= Math.min(a.y1,a.y2) && y <= Math.max(a.y1,a.y2);
+            } else if(a.tool === 'text' || a.tool === 'icon' || a.tool === 'image') {
+                hit = Math.hypot(a.x - x, a.y - y) < eraseRadius;
             }
-            return true;
-        });
+
+            if(hit){
+                actions.splice(i, 1);  // удаляем только первый найденный элемент
+                break;                // прекращаем цикл
+            }
+        }
         requestRedraw();
         return;
     }
@@ -215,7 +226,7 @@ canvas.addEventListener('mousedown', e => {
 canvas.addEventListener('mousemove', e => {
     const [x, y] = screenToLogical(e.clientX, e.clientY);
 
-    if(tool === 'hand' && isPanning){
+    if(isPanning){
         camX -= (e.clientX - panStart.x) / scale;
         camY -= (e.clientY - panStart.y) / scale;
         panStart = {x: e.clientX, y: e.clientY};
@@ -258,8 +269,9 @@ canvas.addEventListener('mouseup', e => {
         preview = null;
     }
     isPanning = false;
-    requestRedraw();
 });
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 canvas.addEventListener('wheel', e => {
     e.preventDefault();
@@ -380,19 +392,34 @@ function loadMap(){ fileLoader.click(); }
 function handleFile(e){ const r=new FileReader(); r.onload=ev=>{ actions=JSON.parse(ev.target.result); requestRedraw(); }; r.readAsText(e.target.files[0]); }
 
 const hideToolsBtn = document.getElementById('hideToolsBtn');
-const toolsPanel = document.querySelector('.tools-panel');
-let toolsHidden = false;
-hideToolsBtn.addEventListener('click', () => {
-    toolsPanel.classList.toggle('hidden');
+const toolsWrapper = document.getElementById('toolsWrapper');
 
-    if (toolsPanel.classList.contains('hidden')) {
-        hideToolsBtn.style.right = "0px";
+hideToolsBtn.addEventListener('click', () => {
+    toolsWrapper.classList.toggle('hidden');
+
+    if (toolsWrapper.classList.contains('hidden')) {
         hideToolsBtn.innerHTML = ">";
     } else {
-        hideToolsBtn.style.right = "170px";
         hideToolsBtn.innerHTML = "<";
     }
 });
+
+// Подсветка выбранного инструмента
+document.querySelectorAll('.tools-panel button[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tools-panel button[data-tool]').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    });
+});
+
+// Выделение выбранной карты
+document.querySelectorAll('.map-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.map-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+    });
+});
+
 </script>
 
 </body>
