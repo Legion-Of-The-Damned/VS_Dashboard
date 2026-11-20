@@ -4,223 +4,525 @@
     <meta charset="UTF-8">
     <title>Legion Of The Damned</title>
 
-    <!-- Готический шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
 
-    <!-- CSS -->
     <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/discord-widget.css">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="static/img/favicon.png">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
 </head>
 <body>
 
-    <!-- Loader -->
-    <div id="loader" class="show"></div>
+<div id="loader" class="show"></div>
 
-    <!-- Основной контент -->
-    <div id="content" style="display:none;">
+<div id="content" style="display:none;">
 
-        <!-- Верхняя панель -->
-        <header>
-            <h1>Legion Of The Damned</h1>
-            <nav>
-                <a href="dashboard.html">Дашборд</a>
-                <a href="about.html">О клане</a>
-            </nav>
-        </header>
+<header>
+    <h1>Legion Of The Damned</h1>
 
-        <!-- Информационный центр -->
-        <div id="info-block">
+    <nav>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="{{ url_for('legion_beacon') }}">Legion Beacon</a>
+        <a href="/kv-map" data-i18n="nav_kv_map">Карты КВ</a>
+    </nav>
 
-            <!-- ЛЕВАЯ КОЛОНКА -->
-            <div class="info-left">
-                <h2>Новости клана</h2>
-                <div class="news-card">05.02 — Рейд на босса</div>
-                <div class="news-card">06.02 — Встреча клана</div>
-                <div class="news-card">07.02 — Турнир</div>
+    <div class="header-controls">
 
-                <!-- Видео с кнопками по бокам -->
-                <div class="main-video" style="position: relative; width: 100%; margin-top: 10px;">
-
-                    <iframe
-                        id="videoFrame"
-                        width="100%"
-                        height="250"
-                        src="https://www.youtube.com/embed/C0xV4Q29Lcs"
-                        title="Legion Of The Damned"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-
-                    <!-- Кнопки по бокам видео -->
-                    <button id="videoPrev" style="
-                        position: absolute;
-                        top: 50%;
-                        left: 0;
-                        transform: translateY(-50%);
-                        background: rgba(0,0,0,0.5);
-                        color: #fff;
-                        border: none;
-                        padding: 10px 15px;
-                        cursor: pointer;
-                        font-size: 18px;
-                    ">⬅</button>
-
-                    <button id="videoNext" style="
-                        position: absolute;
-                        top: 50%;
-                        right: 0;
-                        transform: translateY(-50%);
-                        background: rgba(0,0,0,0.5);
-                        color: #fff;
-                        border: none;
-                        padding: 10px 15px;
-                        cursor: pointer;
-                        font-size: 18px;
-                    ">➡</button>
-
-                </div>
-            </div>
-
-            <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА -->
-            <div class="info-center">
-                <h2>Добро пожаловать!</h2>
-                <img src="static/img/favicon.png" alt="Логотип" class="clan-logo">
-                <a href="#" class="join-button">Вступить в клан</a>
-            </div>
-
-            <!-- ПРАВАЯ КОЛОНКА -->
-            <div class="info-right">
-                <h2>Discord сервер</h2>
-                <div class="discord-widget">
-                    <iframe
-                        src="https://discord.com/widget?id=828749346505490503&theme=dark"
-                        allowtransparency="true"
-                        frameborder="0"
-                        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
-                    </iframe>
-                </div>
-            </div>
+        <div class="lang-switcher">
+            <select id="langSelect">
+                <option value="ua">UA</option>
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+            </select>
         </div>
 
-        <!-- Блок бота -->
-        <div id="bot-block">
-            <div class="bot-left">
-                <img src="static/img/bot.png" alt="Void Sentinel" class="bot-image-small">
-            </div>
+        <div class="auth-block">
+            {% if user %}
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=64' %}
+                {% endif %}
 
-            <div class="bot-right">
-                <h2>Void Sentinel</h2>
-                <p>
-                    Void Sentinel — это клановый бот, который помогает управлять сервером,
-                    отслеживать события и держать участников в курсе всех новостей клана.
-                </p>
+                <div class="user-menu" id="userMenu">
+                    <button type="button"
+                            class="user-chip"
+                            id="userMenuToggle"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            title="{{ user.global_name or user.username }}">
+                        {% if avatar_url %}
+                            <img src="{{ avatar_url }}" alt="">
+                        {% else %}
+                            <span class="user-initial">{{ (user.global_name or user.username)[0]|upper }}</span>
+                        {% endif %}
+                        <span class="user-name">{{ user.global_name or user.username }}</span>
+                    </button>
 
-                <!-- Аккордеон -->
-                <div class="bot-accordion">
-
-                    <button class="accordion">⚔ Основные функции</button>
-                    <div class="panel">
-                        <ul>
-                            <li>Приветствие новичков</li>
-                            <li>Уведомления</li>
-                            <li>/помощь</li>
-                            <li>/состав_клана</li>
-                            <li>/пинг</li>
-                            <li>/заявка</li>
-                        </ul>
-                    </div>
-
-                    <button class="accordion">⚔ Боевые команды</button>
-                    <div class="panel">
-                        <ul>
-                            <li>/дуэль</li>
-                            <li>/статистика</li>
-                            <li>/общая_статистика</li>
-                        </ul>
-                    </div>
-
-                    <button class="accordion">🎲 Развлекательные</button>
-                    <div class="panel">
-                        <ul>
-                            <li>/музыка</li>
-                            <li>/викторина</li>
-                            <li>/монетка</li>
-                        </ul>
-                    </div>
-
-                    <button class="accordion">🚨 Административные</button>
-                    <div class="panel">
-                        <ul>
-                            <li>/бан</li>
-                            <li>/кик</li>
-                            <li>/мут</li>
-                        </ul>
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="{{ url_for('profile') }}" class="user-dropdown-item">👤 Личный кабинет</a>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item user-dropdown-logout" data-i18n="auth_logout">Выйти</a>
                     </div>
                 </div>
-
-                <a href="#" class="join-button">Пригласить бота</a>
-            </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="discord-btn discord-btn-login"
+                   data-i18n-title="auth_login_title"
+                   title="Войти через Discord">
+                    <svg width="18" height="18" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+                        <path d="M60.1 4.9A58.9 58.9 0 0 0 45.4.4a.2.2 0 0 0-.2.1 40.6 40.6 0 0 0-1.8 3.7 54.5 54.5 0 0 0-16.3 0A38.7 38.7 0 0 0 25.3.5a.2.2 0 0 0-.2-.1 58.7 58.7 0 0 0-14.7 4.5.2.2 0 0 0-.1.1A60.3 60.3 0 0 0 .4 45.6a.2.2 0 0 0 .1.2 59.2 59.2 0 0 0 17.8 9 .2.2 0 0 0 .2-.1 42.8 42.8 0 0 0 3.7-6 .2.2 0 0 0-.1-.3 39.1 39.1 0 0 1-5.6-2.7.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42.2 42.2 0 0 0 35.8 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.7 36.7 0 0 1-5.6 2.7.2.2 0 0 0-.1.3 48.1 48.1 0 0 0 3.7 6 .2.2 0 0 0 .2.1 59 59 0 0 0 17.8-9 .2.2 0 0 0 .1-.2 59.9 59.9 0 0 0-10-40.6.2.2 0 0 0-.1-.1ZM23.7 37.4c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Z"/>
+                    </svg>
+                    <span data-i18n="auth_login">Войти</span>
+                </a>
+            {% endif %}
         </div>
-
-        <!-- Футер -->
-        <footer>
-            <div class="footer-content">
-                <p>© 2026 Legion Of The Damned. Все права защищены.</p>
-                <div class="social-links">
-                    <a href="https://www.instagram.com/damnlegionnaires/" target="_blank">Instagram</a>
-                    <a href="https://www.youtube.com/@GLOTD" target="_blank">YouTube</a>
-                    <a href="https://www.tiktok.com/@legion_of_the_damned" target="_blank">TikTok</a>
-                </div>
-            </div>
-        </footer>
 
     </div>
+</header>
 
-    <!-- JS -->
-    <script>
-        // Loader
-        window.addEventListener('load', () => {
-            const loader = document.getElementById('loader');
-            const content = document.getElementById('content');
-            loader.classList.add('hide');
-            setTimeout(() => content.style.display = 'block', 500);
+<div id="info-block">
+
+    <div class="info-left">
+        <h2 data-i18n="calendar_title">Календарь событий</h2>
+
+        <div class="calendar-widget">
+            <div class="calendar-header">
+                <button id="calPrev">&lt;</button>
+                <span id="calMonthYear"></span>
+                <button id="calNext">&gt;</button>
+            </div>
+            <div class="calendar-weekdays" id="calendarWeekdays"></div>
+            <div class="calendar-days" id="calendarDays"></div>
+        </div>
+
+        <div id="calendarEvents" class="calendar-events">
+            <div class="news-card" data-i18n="calendar_select_day">Выберите день, чтобы посмотреть события</div>
+        </div>
+
+        <div class="main-video" style="position:relative;margin-top:10px;">
+            <div id="videoPlayer" style="width:100%;height:260px;"></div>
+            <button id="videoPrev" style="position:absolute;top:50%;left:0;transform:translateY(-50%);z-index:10;">⬅</button>
+            <button id="videoNext" style="position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:10;">➡</button>
+        </div>
+    </div>
+
+    <div class="info-center">
+        <h2 data-i18n="welcome">Добро пожаловать!</h2>
+        <img src="static/img/favicon.png" class="clan-logo" alt="Logo">
+        <a id="joinClanButton" class="join-button" data-i18n="join_clan" target="_blank">Вступить</a>
+    </div>
+
+    <div class="info-right">
+        <h2 data-i18n="discord">Discord сервер</h2>
+        <div id="discord-custom-widget"></div>
+    </div>
+
+</div>
+
+<div id="bot-block">
+    <div class="bot-left">
+        <img src="static/img/bot.png" class="bot-image-small" alt="Bot">
+    </div>
+
+    <div class="bot-right">
+        <h2 data-i18n="bot_title">Void Sentinel</h2>
+        <p data-i18n="bot_desc">Описание бота</p>
+
+        <div id="bot-accordion" class="bot-accordion"></div>
+
+        <div class="bot-buttons">
+            <a id="inviteBotButton" href="#" class="join-button" data-i18n="invite_bot" target="_blank">Invite</a>
+            <a href="{{ url_for('dashboard') }}" class="join-button github-button">Дашборд</a>
+            <a href="https://github.com/Legion-Of-The-Damned/void-sentinel" class="join-button github-button" target="_blank">GitHub</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <div class="footer-column">
+            <h3 data-i18n="footer_socials">Соцсети</h3>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/@legion_of_the_damned" target="_blank">TikTok</a>
+                <a href="https://steamcommunity.com/groups/clandamned" target="_blank">Steam</a>
+                <a href="https://www.twitch.tv/legion_of_damned" target="_blank">Twitch</a>
+                <a href="https://www.youtube.com/@Guild_LOTD" target="_blank">YouTube</a>
+            </div>
+        </div>
+
+        <div class="footer-column">
+            <h3 data-i18n="footer_contacts">Контакты</h3>
+            <p>Email: <a href="mailto:lotdlegionarydamned@gmail.com">lotdlegionarydamned@gmail.com</a></p>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p data-i18n="footer">© 2026 Legion Of The Damned</p>
+        <p class="clan-motto" id="clanMotto"></p>
+    </div>
+</footer>
+
+</div>
+
+<script src="static/js/discord-widget.js"></script>
+
+<script>
+/* ==================== ВИДЕО ==================== */
+const videos = ["yDrX9i7pi-U", "cIpRzDUE0II", "RFkkN7QVLZI"];
+let currentVideo = 0;
+let player = null;
+let playerReady = false;
+let ytApiReady = false;
+let playerInitialized = false;
+
+const ytTag = document.createElement('script');
+ytTag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(ytTag);
+
+window.onYouTubeIframeAPIReady = function () {
+    ytApiReady = true;
+    if (document.getElementById("content").style.display === "block") {
+        initVideoPlayer();
+    }
+};
+
+function initVideoPlayer() {
+    if (playerInitialized || !ytApiReady) return;
+    const el = document.getElementById("videoPlayer");
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+        setTimeout(initVideoPlayer, 100);
+        return;
+    }
+
+    playerInitialized = true;
+
+    player = new YT.Player('videoPlayer', {
+        height: '300',
+        width: '100%',
+        videoId: videos[currentVideo],
+        playerVars: {
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            enablejsapi: 1
+        },
+        events: {
+            'onReady': (event) => {
+                playerReady = true;
+                try { event.target.setPlaybackQuality('hd720'); } catch(e){}
+            },
+            'onStateChange': (event) => {
+                if (event.data === YT.PlayerState.PLAYING) {
+                    try {
+                        const q = event.target.getPlaybackQuality();
+                        if (q !== 'hd720' && q !== 'hd1080') {
+                            event.target.setPlaybackQuality('hd720');
+                        }
+                    } catch(e){}
+                }
+            }
+        }
+    });
+}
+
+/* Единственная функция переключения — БЕЗ автовоспроизведения */
+function loadVideo(index) {
+    currentVideo = (index + videos.length) % videos.length;
+    if (player && playerReady && typeof player.cueVideoById === 'function') {
+        // cueVideoById — загружает превью, но НЕ запускает воспроизведение
+        player.cueVideoById({
+            videoId: videos[currentVideo],
+            suggestedQuality: 'hd720'
+        });
+    }
+}
+
+document.getElementById("videoPrev").onclick = () => loadVideo(currentVideo - 1);
+document.getElementById("videoNext").onclick = () => loadVideo(currentVideo + 1);
+
+/* ==================== ЕДИНЫЙ LOADER + инициализация ==================== */
+window.addEventListener("load", () => {
+    document.getElementById("loader").classList.add("hide");
+    setTimeout(() => {
+        document.getElementById("content").style.display = "block";
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                initVideoPlayer();
+            });
+        });
+    }, 500);
+});
+
+/* Аккордеон бота */
+function buildBotAccordion() {
+    const container = document.getElementById("bot-accordion");
+    container.innerHTML = "";
+
+    const data = dictionary.bot_commands || {};
+
+    for (let section in data) {
+        const btn = document.createElement("button");
+        btn.className = "accordion";
+        btn.textContent = section;
+
+        const panel = document.createElement("div");
+        panel.className = "panel";
+
+        const ul = document.createElement("ul");
+        data[section].forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            ul.appendChild(li);
         });
 
-        // Аккордеон
-        const acc = document.getElementsByClassName("accordion");
-        for (let i = 0; i < acc.length; i++) {
-            acc[i].addEventListener("click", function () {
-                this.classList.toggle("active");
-                const panel = this.nextElementSibling;
-                panel.style.maxHeight
-                    ? panel.style.maxHeight = null
-                    : panel.style.maxHeight = panel.scrollHeight + "px";
-            });
+        panel.appendChild(ul);
+        container.appendChild(btn);
+        container.appendChild(panel);
+    }
+
+    container.querySelectorAll(".accordion").forEach(btn => {
+        btn.onclick = function () {
+            this.classList.toggle("active");
+            const panel = this.nextElementSibling;
+            panel.style.maxHeight ? panel.style.maxHeight = null : panel.style.maxHeight = panel.scrollHeight + "px";
+        };
+    });
+}
+
+/* ----------------- КАЛЕНДАРЬ ----------------- */
+let currentCalDate = new Date();
+
+const annualEvents = {
+    "01-01": "Новый год 🎄",
+    "01-15": "Создание подразделения в STALZONE",
+    "02-23": "День защитника 🛡️",
+    "02-14": "День спуска бисмарка",
+    "03-11": "День рождение Магистра",
+    "03-21": "День рождения Библиария (GUTS)",
+    "04-01": "1 апреля",
+    "04-06": "День создание сервера Discord",
+    "04-18": "День создание бота Void Sentinel",
+    "05-09": "День Победы 🎖️",
+    "10-31": "Хэллоуин 🎃",
+    "11-07": "День N7 (Mass Effect Day 🌌)",
+    "12-31": "Канун Нового года 🎆"
+};
+
+const oneTimeEvents = {
+    "2026-09-15": "Большой клановый турнир ⚔️",
+    "2026-11-20": "Осада замка (рейд) 🏰"
+};
+
+const i18nCalendar = {
+    ru: {
+        months: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+        weekdays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+        noEvents: "Событий не запланировано"
+    },
+    ua: {
+        months: ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"],
+        weekdays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"],
+        noEvents: "Подій не заплановано"
+    },
+    en: {
+        months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        noEvents: "No events scheduled"
+    }
+};
+
+function renderCalendar() {
+    const monthYearText = document.getElementById("calMonthYear");
+    const calendarDays = document.getElementById("calendarDays");
+    const calendarWeekdays = document.getElementById("calendarWeekdays");
+    const eventDetails = document.getElementById("calendarEvents");
+
+    const lang = document.documentElement.lang || "ru";
+    const loc = i18nCalendar[lang] || i18nCalendar.ru;
+
+    const year = currentCalDate.getFullYear();
+    const month = currentCalDate.getMonth();
+
+    monthYearText.textContent = `${loc.months[month]} ${year}`;
+
+    calendarWeekdays.innerHTML = "";
+    loc.weekdays.forEach(dayName => {
+        const dayHead = document.createElement("div");
+        dayHead.textContent = dayName;
+        calendarWeekdays.appendChild(dayHead);
+    });
+
+    calendarDays.innerHTML = "";
+
+    const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyDiv = document.createElement("div");
+        emptyDiv.classList.add("empty");
+        calendarDays.appendChild(emptyDiv);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayDiv = document.createElement("div");
+        dayDiv.textContent = day;
+
+        const formattedMonth = String(month + 1).padStart(2, '0');
+        const formattedDay = String(day).padStart(2, '0');
+
+        const annualKey = `${formattedMonth}-${formattedDay}`;
+        const fullDateKey = `${year}-${formattedMonth}-${formattedDay}`;
+
+        const eventTitle = oneTimeEvents[fullDateKey] || annualEvents[annualKey];
+
+        const today = new Date();
+        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            dayDiv.classList.add("today");
         }
 
-        // ===== ВИДЕО ПЕРЕКЛЮЧЕНИЕ =====
-        const videos = [
-            "IN-B9rHqri0",  // Главное видео
-            "hZ-joKkSKwc",  // Второе
-            "C0xV4Q29Lcs"   // Третье
-        ];
+        if (eventTitle) {
+            dayDiv.classList.add("has-event");
+            dayDiv.title = eventTitle;
+        }
 
-        let currentVideo = 0;
-        const frame = document.getElementById("videoFrame");
+        dayDiv.addEventListener("click", () => {
+            if (eventTitle) {
+                eventDetails.innerHTML = `<div class="news-card"><strong>${day} ${loc.months[month]}:</strong> ${eventTitle}</div>`;
+            } else {
+                eventDetails.innerHTML = `<div class="news-card"><strong>${day} ${loc.months[month]}:</strong> ${loc.noEvents}</div>`;
+            }
+        });
 
-        document.getElementById("videoPrev").onclick = () => {
-            currentVideo = (currentVideo - 1 + videos.length) % videos.length;
-            frame.src = "https://www.youtube.com/embed/" + videos[currentVideo];
-        };
+        calendarDays.appendChild(dayDiv);
+    }
+}
 
-        document.getElementById("videoNext").onclick = () => {
-            currentVideo = (currentVideo + 1) % videos.length;
-            frame.src = "https://www.youtube.com/embed/" + videos[currentVideo];
-        };
-    </script>
+document.getElementById("calPrev").onclick = () => {
+    currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+    renderCalendar();
+};
+
+document.getElementById("calNext").onclick = () => {
+    currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+    renderCalendar();
+};
+
+/* 🌍 JSON локализация */
+const supportedLangs = ["ru", "ua", "en"];
+let dictionary = {};
+let currentDiscordLang = "ru";
+
+async function loadLanguage(lang){
+    if(!supportedLangs.includes(lang)) lang="ru";
+
+    try {
+        const res = await fetch(`/static/locales/${lang}.json`);
+        dictionary = await res.json();
+    } catch {
+        const res = await fetch(`/static/locales/ru.json`);
+        dictionary = await res.json();
+        lang = "ru";
+    }
+
+    document.documentElement.lang = lang;
+    localStorage.setItem("lang", lang);
+    document.getElementById("langSelect").value = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const key = el.dataset.i18n;
+        if(dictionary[key]) el.textContent = dictionary[key];
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach(el=>{
+        const key = el.dataset.i18nTitle;
+        if(dictionary[key]) el.title = dictionary[key];
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+        const key = el.dataset.i18nPlaceholder;
+        if(dictionary[key]) el.placeholder = dictionary[key];
+    });
+
+    if(dictionary.join_clan_href)
+        document.getElementById("joinClanButton").href = dictionary.join_clan_href;
+
+    if(dictionary.invite_bot_href)
+        document.getElementById("inviteBotButton").href = dictionary.invite_bot_href;
+
+    const motto = document.getElementById("clanMotto");
+    if(motto && dictionary.footer_motto)
+        motto.textContent = dictionary.footer_motto;
+
+    buildBotAccordion();
+    renderCalendar();
+
+    if(currentDiscordLang !== lang){
+        currentDiscordLang = lang;
+        if (typeof loadDiscordWidget === "function") {
+            loadDiscordWidget(lang);
+        }
+    }
+}
+
+function detectLanguage(){
+    const saved=localStorage.getItem("lang");
+    if(saved && supportedLangs.includes(saved)) return saved;
+    const browser=navigator.language.slice(0,2);
+    if(supportedLangs.includes(browser)) return browser;
+    return "ru";
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    loadLanguage(detectLanguage());
+    document.getElementById("langSelect")
+        .addEventListener("change",e=>loadLanguage(e.target.value));
+});
+
+/* Beacon */
+document.getElementById("legionBeaconButton") &&
+document.getElementById("legionBeaconButton").addEventListener("click", () => {
+    window.location.href = "/legionbeacon";
+});
+
+/* ---------- User menu dropdown ---------- */
+(function initUserMenu() {
+    const menu     = document.getElementById("userMenu");
+    const toggle   = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    if (!menu || !toggle || !dropdown) return;
+
+    dropdown.removeAttribute("hidden");
+
+    const isOpen = () => menu.classList.contains("open");
+
+    function open() {
+        menu.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+    }
+    function close() {
+        menu.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+    }
+
+    toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isOpen() ? close() : open();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!menu.contains(e.target)) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isOpen()) {
+            close();
+            toggle.focus();
+        }
+    });
+})();
+</script>
 
 </body>
 </html>
