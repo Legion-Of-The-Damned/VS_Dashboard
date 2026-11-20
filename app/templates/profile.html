@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Личный кабинет — Legion Of The Damned</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/discord-widget.css') }}">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+    <style>
+        /* ==================== ЛИЧНЫЙ КАБИНЕТ ==================== */
+        .profile-page {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #ccc;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .profile-page { grid-template-columns: 1fr; }
+        }
+
+        /* --- ЛЕВАЯ КОЛОНКА --- */
+        .profile-sidebar {
+            position: sticky;
+            top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .profile-sidebar { position: static; }
+        }
+
+        .profile-card {
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 25px;
+        }
+
+        .profile-header { text-align: center; }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 18px;
+            background: linear-gradient(135deg, #b91c1c, #450a0a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "UnifrakturCook", cursive;
+            font-size: 3rem;
+            color: #fff;
+            border: 3px solid #333;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar-status {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: 3px solid #141414;
+            box-shadow: 0 0 0 2px #141414;
+        }
+
+        .profile-name {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .profile-discriminator {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            font-family: monospace;
+        }
+
+        /* Мета-информация */
+        .profile-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #2a2a2a;
+            text-align: left;
+        }
+
+        .profile-meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .profile-meta-label {
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .profile-meta-value {
+            color: #ccc;
+            font-weight: 500;
+            font-family: monospace;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .profile-meta-value.accent {
+            color: #b91c1c;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Кнопка выхода */
+        .profile-logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px auto 0;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #7f1d1d;
+            color: #ef4444;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s;
+            width: fit-content;
+        }
+
+        .profile-logout:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* --- ПРАВАЯ КОЛОНКА --- */
+        .profile-main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .profile-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 0 0 18px;
+        }
+
+        .profile-section-title::before {
+            content: "";
+            width: 3px;
+            height: 20px;
+            background: #b91c1c;
+            border-radius: 2px;
+        }
+
+        /* Ветки клана */
+        .profile-branches {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profile-branch {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            transition: border-color 0.2s;
+        }
+
+        .profile-branch:hover { border-color: #b91c1c; }
+
+        .profile-branch-icon {
+            font-size: 1.5rem;
+            width: 38px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .profile-branch-body { flex: 1; min-width: 0; }
+
+        .profile-branch-game {
+            color: #b91c1c;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+
+        .profile-branch-name {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .profile-branch-role {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        /* Бейджи членства */
+        .profile-branch-badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            flex-shrink: 0;
+            border: 1px solid transparent;
+        }
+
+        .profile-branch-badge.member {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .profile-branch-badge.pending {
+            background: rgba(234, 179, 8, 0.12);
+            color: #eab308;
+            border-color: rgba(234, 179, 8, 0.3);
+        }
+
+        .profile-branch-badge.not-member {
+            background: rgba(107, 114, 128, 0.12);
+            color: #9ca3af;
+            border-color: rgba(107, 114, 128, 0.3);
+        }
+
+        .profile-branch-badge.paused {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Настройки */
+        .profile-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .profile-setting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid #222;
+            flex-wrap: wrap;
+        }
+
+        .profile-setting:last-child { border-bottom: none; }
+
+        .profile-setting-info { flex: 1; min-width: 200px; }
+
+        .profile-setting-label {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .profile-setting-desc {
+            color: #777;
+            font-size: 0.82rem;
+        }
+
+        .profile-setting-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            min-width: 250px;
+        }
+
+        .profile-input,
+        .profile-select {
+            padding: 8px 12px;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .profile-input:focus,
+        .profile-select:focus { border-color: #b91c1c; }
+
+        .profile-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='%23b91c1c' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 32px;
+            cursor: pointer;
+        }
+
+        .profile-select option {
+            background: #111;
+            color: #fff;
+        }
+
+        .profile-select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .profile-btn {
+            padding: 8px 16px;
+            background: #b91c1c;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .profile-btn:hover { background: #dc2626; }
+
+        .profile-btn.secondary {
+            background: transparent;
+            border: 1px solid #444;
+            color: #ccc;
+        }
+
+        .profile-btn.secondary:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+
+        .profile-save-row {
+            padding-top: 20px;
+            margin-top: 10px;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-left: 4px solid #b91c1c;
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: 8px;
+            min-width: 260px;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            animation: toastIn 0.3s ease;
+        }
+
+        .toast.success { border-left-color: #22c55e; }
+        .toast.error   { border-left-color: #ef4444; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .profile-skeleton {
+            color: #555;
+            font-size: 0.9rem;
+            padding: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .profile-setting { flex-direction: column; align-items: stretch; }
+            .profile-setting-control { width: 100%; min-width: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="show"></div>
+
+<div id="content" style="display:none;">
+
+<header>
+    <h1>Личный кабинет</h1>
+
+    <nav>
+        <a href="{{ url_for('home') }}">Главная</a>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="{{ url_for('legion_beacon') }}">Legion Beacon</a>
+        <a href="{{ url_for('kv_map') }}" data-i18n="nav_kv_map">Карты КВ</a>
+    </nav>
+
+    <div class="header-controls">
+
+        <div class="lang-switcher">
+            <select id="langSelect">
+                <option value="ua">UA</option>
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="auth-block">
+            {% if user %}
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=64' %}
+                {% endif %}
+
+                <div class="user-menu" id="userMenu">
+                    <button type="button"
+                            class="user-chip"
+                            id="userMenuToggle"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            title="{{ user.global_name or user.username }}">
+                        {% if avatar_url %}
+                            <img src="{{ avatar_url }}" alt="">
+                        {% else %}
+                            <span class="user-initial">{{ (user.global_name or user.username)[0]|upper }}</span>
+                        {% endif %}
+                        <span class="user-name">{{ user.global_name or user.username }}</span>
+                    </button>
+
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="{{ url_for('profile') }}" class="user-dropdown-item">👤 Личный кабинет</a>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item user-dropdown-logout" data-i18n="auth_logout">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="discord-btn discord-btn-login"
+                   data-i18n-title="auth_login_title"
+                   title="Войти через Discord">
+                    <svg width="18" height="18" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+                        <path d="M60.1 4.9A58.9 58.9 0 0 0 45.4.4a.2.2 0 0 0-.2.1 40.6 40.6 0 0 0-1.8 3.7 54.5 54.5 0 0 0-16.3 0A38.7 38.7 0 0 0 25.3.5a.2.2 0 0 0-.2-.1 58.7 58.7 0 0 0-14.7 4.5.2.2 0 0 0-.1.1A60.3 60.3 0 0 0 .4 45.6a.2.2 0 0 0 .1.2 59.2 59.2 0 0 0 17.8 9 .2.2 0 0 0 .2-.1 42.8 42.8 0 0 0 3.7-6 .2.2 0 0 0-.1-.3 39.1 39.1 0 0 1-5.6-2.7.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42.2 42.2 0 0 0 35.8 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.7 36.7 0 0 1-5.6 2.7.2.2 0 0 0-.1.3 48.1 48.1 0 0 0 3.7 6 .2.2 0 0 0 .2.1 59 59 0 0 0 17.8-9 .2.2 0 0 0 .1-.2 59.9 59.9 0 0 0-10-40.6.2.2 0 0 0-.1-.1ZM23.7 37.4c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Z"/>
+                    </svg>
+                    <span data-i18n="auth_login">Войти</span>
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+</header>
+
+<main class="profile-page">
+
+    <!-- ==================== ЛЕВАЯ КОЛОНКА ==================== -->
+    <aside class="profile-sidebar">
+
+        <div class="profile-card">
+            <div class="profile-header">
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=256' %}
+                {% endif %}
+
+                <div class="profile-avatar">
+                    {% if avatar_url %}
+                        <img src="{{ avatar_url }}" alt="">
+                    {% else %}
+                        {{ (user.global_name or user.username)[0]|upper }}
+                    {% endif %}
+                    <span class="profile-avatar-status" title="В сети"></span>
+                </div>
+
+                <div class="profile-name">{{ user.global_name or user.username }}</div>
+                <div class="profile-discriminator">@{{ user.username }}</div>
+
+                <div class="profile-meta">
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Discord ID</span>
+                        <span class="profile-meta-value">{{ user.id }}</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Должность</span>
+                        <span class="profile-meta-value accent" id="profilePosition">—</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Звание</span>
+                        <span class="profile-meta-value" id="profileRank">—</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">В клане с</span>
+                        <span class="profile-meta-value" id="profileJoined">—</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Страна</span>
+                        <span class="profile-meta-value" id="profileCountry">—</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Область</span>
+                        <span class="profile-meta-value" id="profileRegion">—</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Город</span>
+                        <span class="profile-meta-value" id="profileCity">—</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="profile-meta-label">Дата рождения</span>
+                        <span class="profile-meta-value" id="profileBirthdate">—</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('logout') }}" class="profile-logout">
+                    <span>🚪</span>
+                    <span>Выйти из аккаунта</span>
+                </a>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ==================== ПРАВАЯ КОЛОНКА ==================== -->
+    <section class="profile-main">
+
+        <!-- Ветки клана -->
+        <div class="profile-card">
+            <h2 class="profile-section-title">Мои ветки клана</h2>
+            <div class="profile-branches" id="branchesList">
+                <div class="profile-skeleton">Загрузка веток…</div>
+            </div>
+        </div>
+
+        <!-- Настройки профиля -->
+        <div class="profile-card">
+            <h2 class="profile-section-title">Настройки</h2>
+            <div class="profile-settings">
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Страна</div>
+                        <div class="profile-setting-desc">Выберите из списка</div>
+                    </div>
+                    <div class="profile-setting-control">
+                        <select id="settingCountry" class="profile-select">
+                            <option value="">— Не выбрано —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Область</div>
+                        <div class="profile-setting-desc">Выберите из списка</div>
+                    </div>
+                    <div class="profile-setting-control">
+                        <select id="settingRegion" class="profile-select" disabled>
+                            <option value="">— Не выбрано —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Город</div>
+                        <div class="profile-setting-desc">Выберите из списка</div>
+                    </div>
+                    <div class="profile-setting-control">
+                        <select id="settingCity" class="profile-select" disabled>
+                            <option value="">— Не выбрано —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Дата рождения</div>
+                        <div class="profile-setting-desc">Ваш день рождения (не ранее 1950 г.)</div>
+                    </div>
+                    <div class="profile-setting-control">
+                        <input type="date" id="settingBirthdate" class="profile-input"
+                               min="1950-01-01" max="">
+                    </div>
+                </div>
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Уведомления о КВ</div>
+                        <div class="profile-setting-desc">Показывать напоминания о клановых войнах</div>
+                    </div>
+                    <div class="profile-setting-control" style="min-width: auto;">
+                        <label style="display:flex; align-items:center; gap:8px; color:#ccc; cursor:pointer;">
+                            <input type="checkbox" id="settingKvNotify" checked>
+                            <span>Включены</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Уведомления о «Выбросе»</div>
+                        <div class="profile-setting-desc">Пинги по событиям «Выброс»</div>
+                    </div>
+                    <div class="profile-setting-control" style="min-width: auto;">
+                        <label style="display:flex; align-items:center; gap:8px; color:#ccc; cursor:pointer;">
+                            <input type="checkbox" id="settingDropNotify" checked>
+                            <span>Включены</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="profile-setting">
+                    <div class="profile-setting-info">
+                        <div class="profile-setting-label">Сбросить настройки профиля</div>
+                        <div class="profile-setting-desc">Удалить локальные настройки (не влияет на аккаунт Discord)</div>
+                    </div>
+                    <div class="profile-setting-control" style="min-width: auto;">
+                        <button type="button" class="profile-btn secondary" id="resetProfileSettings">
+                            Сбросить
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Кнопка сохранения в самом низу -->
+                <div class="profile-save-row">
+                    <button type="button" class="profile-btn" id="savePersonalInfo">
+                        💾 Сохранить данные
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="{{ url_for('static', filename='js/discord-widget.js') }}"></script>
+
+<script>
+/* ==================== LOADER ==================== */
+window.addEventListener("load", () => {
+    document.getElementById("loader").classList.add("hide");
+    setTimeout(() => {
+        document.getElementById("content").style.display = "block";
+    }, 500);
+});
+
+/* ==================== TOASTS ==================== */
+function showToast(message, type = "info", timeout = 3000) {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateX(40px)";
+        el.style.transition = "all 0.3s";
+        setTimeout(() => el.remove(), 300);
+    }, timeout);
+}
+
+/* ==================== ЛОКАЛИЗАЦИЯ ==================== */
+const supportedLangs = ["ru", "ua", "en"];
+let dictionary = {};
+let currentDiscordLang = "ru";
+
+async function loadLanguage(lang){
+    if(!supportedLangs.includes(lang)) lang="ru";
+    try {
+        const res = await fetch(`/static/locales/${lang}.json`);
+        dictionary = await res.json();
+    } catch {
+        try {
+            const res = await fetch(`/static/locales/ru.json`);
+            dictionary = await res.json();
+        } catch {}
+        lang = "ru";
+    }
+    document.documentElement.lang = lang;
+    localStorage.setItem("lang", lang);
+    document.getElementById("langSelect").value = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const key = el.dataset.i18n;
+        if(dictionary[key]) el.textContent = dictionary[key];
+    });
+    if(currentDiscordLang !== lang){
+        currentDiscordLang = lang;
+        if (typeof loadDiscordWidget === "function") {
+            loadDiscordWidget(lang);
+        }
+    }
+}
+
+function detectLanguage(){
+    const saved=localStorage.getItem("lang");
+    if(saved && supportedLangs.includes(saved)) return saved;
+    const browser=navigator.language.slice(0,2);
+    if(supportedLangs.includes(browser)) return browser;
+    return "ru";
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    loadLanguage(detectLanguage());
+    document.getElementById("langSelect").addEventListener("change",e=>loadLanguage(e.target.value));
+});
+
+/* ==================== ЗВАНИЯ И СТАТУСЫ ==================== */
+const POSITIONS = [
+    "Огненный Магистр", "Заместитель Магистра", "Библиарий", "Командор", "Капелан",
+    "Полковник", "Кузнец душ", "Офицер подразделения", "Зам. офицера", "Боевой Брат", "Неофит"
+];
+const RANKS_BY_POSITION = [
+    "Лидер", "Заместитель Лидера", "Советник", "Командир", "Судья",
+    "Старший Офицер", "Технический Специалист", "Офицер", "Зам. Офицера", "Боец", "Новичок"
+];
+const BRANCH_ICONS = {
+    "STALZONE": "⚔️", "World Of Warcraft · Firestorm": "🛡️", "Eternal Crusade · Resurrections": "🔥"
+};
+const MEMBERSHIP_STATUSES = {
+    member: { label: "Состою", cls: "member" }, pending: { label: "Заявка", cls: "pending" },
+    not: { label: "Не вступил", cls: "not-member" }, paused: { label: "На паузе", cls: "paused" },
+    left: { label: "Покинул", cls: "not-member" }
+};
+
+/* ==================== БАЗА ДАННЫХ: СТРАНЫ, ОБЛАСТИ, ГОРОДА ==================== */
+const GEO_DATA = {
+    "Россия": {
+        "Московская область": ["Москва", "Балашиха", "Химки", "Подольск", "Мытищи"],
+        "Ленинградская область": ["Санкт-Петербург", "Гатчина", "Выборг", "Всеволожск"],
+        "Свердловская область": ["Екатеринбург", "Нижний Тагил", "Каменск-Уральский", "Первоуральск"],
+        "Новосибирская область": ["Новосибирск", "Бердск", "Искитим", "Куйбышев"],
+        "Ростовская область": ["Ростов-на-Дону", "Таганрог", "Шахты", "Новочеркасск"],
+        "Краснодарский край": ["Краснодар", "Сочи", "Новороссийск", "Армавир"]
+    },
+    "Украина": {
+        "Киевская область": ["Киев", "Белая Церковь", "Бровары", "Ирпень", "Борисполь"],
+        "Харьковская область": ["Харьков", "Лозовая", "Изюм", "Чугуев"],
+        "Одесская область": ["Одесса", "Измаил", "Черноморск", "Белгород-Днестровский"],
+        "Днепропетровская область": ["Днепр", "Кривой Рог", "Каменское", "Никополь"],
+        "Львовская область": ["Львов", "Дрогобыч", "Червоноград", "Стрый"],
+        "Запорожская область": ["Запорожье", "Мелитополь", "Бердянск", "Энергодар"]
+    },
+    "Беларусь": {
+        "Минская область": ["Минск", "Борисов", "Солигорск", "Жодино"],
+        "Гомельская область": ["Гомель", "Мозырь", "Жлобин", "Речица"],
+        "Брестская область": ["Брест", "Барановичи", "Пинск", "Кобрин"],
+        "Витебская область": ["Витебск", "Орша", "Новополоцк", "Полоцк"]
+    },
+    "Казахстан": {
+        "Алматинская область": ["Алматы", "Конаев", "Талдыкорган", "Есик"],
+        "Астанинская область": ["Астана", "Кокшетау", "Степногорск", "Щучинск"],
+        "Карагандинская область": ["Караганда", "Темиртау", "Балхаш", "Жезказган"],
+        "Актюбинская область": ["Актобе", "Кандыагаш", "Хромтау", "Шалкар"]
+    },
+    "Другая": {} // Если страна не в списке
+};
+
+/* ==================== ЛОКАЛЬНЫЕ НАСТРОЙКИ ==================== */
+const STORAGE_PREFIX = "lotd_profile_";
+const localProfile = {
+    getCountry()   { return localStorage.getItem(STORAGE_PREFIX + "country") || ""; },
+    setCountry(v)  { v ? localStorage.setItem(STORAGE_PREFIX + "country", v) : localStorage.removeItem(STORAGE_PREFIX + "country"); },
+    getRegion()    { return localStorage.getItem(STORAGE_PREFIX + "region") || ""; },
+    setRegion(v)   { v ? localStorage.setItem(STORAGE_PREFIX + "region", v) : localStorage.removeItem(STORAGE_PREFIX + "region"); },
+    getCity()      { return localStorage.getItem(STORAGE_PREFIX + "city") || ""; },
+    setCity(v)     { v ? localStorage.setItem(STORAGE_PREFIX + "city", v) : localStorage.removeItem(STORAGE_PREFIX + "city"); },
+    getBirthdate() { return localStorage.getItem(STORAGE_PREFIX + "birthdate") || ""; },
+    setBirthdate(v){ v ? localStorage.setItem(STORAGE_PREFIX + "birthdate", v) : localStorage.removeItem(STORAGE_PREFIX + "birthdate"); },
+    getKvNotify()  { const v = localStorage.getItem(STORAGE_PREFIX + "kv_notify"); return v === null ? true : v === "1"; },
+    setKvNotify(on){ localStorage.setItem(STORAGE_PREFIX + "kv_notify", on ? "1" : "0"); },
+    getDropNotify()  { const v = localStorage.getItem(STORAGE_PREFIX + "drop_notify"); return v === null ? true : v === "1"; },
+    setDropNotify(on){ localStorage.setItem(STORAGE_PREFIX + "drop_notify", on ? "1" : "0"); },
+    reset() {
+        ["country", "region", "city", "birthdate", "kv_notify", "drop_notify"].forEach(k => {
+            localStorage.removeItem(STORAGE_PREFIX + k);
+        });
+    }
+};
+
+/* ==================== ГЕОГРАФИЯ: ИНИЦИАЛИЗАЦИЯ И ЛОГИКА ==================== */
+function initGeography() {
+    const selCountry = document.getElementById("settingCountry");
+    const selRegion = document.getElementById("settingRegion");
+    const selCity = document.getElementById("settingCity");
+
+    // 1. Заполняем список стран
+    Object.keys(GEO_DATA).forEach(country => {
+        const opt = document.createElement("option");
+        opt.value = country;
+        opt.textContent = country;
+        selCountry.appendChild(opt);
+    });
+
+    // 2. Восстанавливаем значения из localStorage
+    const savedCountry = localProfile.getCountry();
+    const savedRegion = localProfile.getRegion();
+    const savedCity = localProfile.getCity();
+
+    if (savedCountry) selCountry.value = savedCountry;
+
+    // 3. Обновляем области при смене страны
+    function updateRegions(selectedRegion = "") {
+        selRegion.innerHTML = '<option value="">— Не выбрано —</option>';
+        selCity.innerHTML = '<option value="">— Не выбрано —</option>';
+        
+        const regions = GEO_DATA[selCountry.value];
+        if (regions && Object.keys(regions).length > 0) {
+            selRegion.disabled = false;
+            Object.keys(regions).forEach(region => {
+                const opt = document.createElement("option");
+                opt.value = region;
+                opt.textContent = region;
+                selRegion.appendChild(opt);
+            });
+            if (selectedRegion) {
+                selRegion.value = selectedRegion;
+                updateCities(savedCity);
+            }
+        } else {
+            selRegion.disabled = true;
+            selCity.disabled = true;
+        }
+    }
+
+    // 4. Обновляем города при смене области
+    function updateCities(selectedCity = "") {
+        selCity.innerHTML = '<option value="">— Не выбрано —</option>';
+        
+        const regions = GEO_DATA[selCountry.value];
+        const cities = regions ? regions[selRegion.value] : null;
+
+        if (cities && cities.length > 0) {
+            selCity.disabled = false;
+            cities.forEach(city => {
+                const opt = document.createElement("option");
+                opt.value = city;
+                opt.textContent = city;
+                selCity.appendChild(opt);
+            });
+            if (selectedCity) selCity.value = selectedCity;
+        } else {
+            selCity.disabled = true;
+        }
+    }
+
+    // Слушатели событий
+    selCountry.addEventListener("change", () => updateRegions());
+    selRegion.addEventListener("change", () => updateCities());
+
+    // Запускаем обновление при загрузке
+    if (savedCountry) {
+        updateRegions(savedRegion);
+    } else {
+        selRegion.disabled = true;
+        selCity.disabled = true;
+    }
+}
+
+/* ==================== ЗАГРУЗКА ПРОФИЛЯ ==================== */
+async function loadProfileStats() {
+    try {
+        const res = await fetch("/api/profile/stats", { headers: { "Accept": "application/json" } });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (!data.ok) throw new Error("Bad response");
+        applyStats(data);
+    } catch (err) {
+        console.warn("Не удалось загрузить данные профиля:", err);
+        showToast("Не удалось загрузить данные профиля", "error");
+        document.getElementById("profilePosition").textContent = "Боевой Брат";
+        document.getElementById("profileRank").textContent = "Боец";
+    }
+}
+
+function applyStats(data) {
+    const { stats, branches } = data;
+    const posIndex = stats.rank || 10;
+    document.getElementById("profilePosition").textContent = POSITIONS[posIndex] || POSITIONS[POSITIONS.length - 1];
+    document.getElementById("profileRank").textContent = RANKS_BY_POSITION[posIndex] || "Новичок";
+    document.getElementById("profileJoined").textContent = stats.joined_at || "—";
+    renderBranches(branches || []);
+    loadPersonalInfo();
+}
+
+function renderBranches(branches) {
+    const list = document.getElementById("branchesList");
+    if (!list) return;
+    if (!branches.length) {
+        list.innerHTML = `<div class="profile-skeleton">Вы пока не состоите ни в одной ветке клана.</div>`;
+        return;
+    }
+    list.innerHTML = branches.map(b => {
+        let statusKey = b.status || (b.joined ? "member" : "not");
+        const status = MEMBERSHIP_STATUSES[statusKey] || MEMBERSHIP_STATUSES.not;
+        return `
+            <div class="profile-branch">
+                <div class="profile-branch-icon">${BRANCH_ICONS[b.game] || "🎮"}</div>
+                <div class="profile-branch-body">
+                    <div class="profile-branch-game">${escapeHtml(b.game)} · ${escapeHtml(b.type)}</div>
+                    <div class="profile-branch-name">${escapeHtml(b.name)}</div>
+                    <div class="profile-branch-role">${escapeHtml(b.role)}</div>
+                </div>
+                <span class="profile-branch-badge ${status.cls}">${status.label}</span>
+            </div>
+        `;
+    }).join("");
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, s => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[s]));
+}
+
+/* ==================== ЛИЧНАЯ ИНФОРМАЦИЯ ==================== */
+function loadPersonalInfo() {
+    document.getElementById("profileCountry").textContent = localProfile.getCountry() || "—";
+    document.getElementById("profileRegion").textContent = localProfile.getRegion() || "—";
+    document.getElementById("profileCity").textContent = localProfile.getCity() || "—";
+    
+    document.getElementById("settingBirthdate").value = localProfile.getBirthdate();
+    const bd = localProfile.getBirthdate();
+    document.getElementById("profileBirthdate").textContent = bd
+        ? new Date(bd).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })
+        : "—";
+}
+
+/* ==================== НАСТРОЙКИ ==================== */
+function initSettings() {
+    const btnSave = document.getElementById("savePersonalInfo");
+    const checkKv = document.getElementById("settingKvNotify");
+    const checkDrop = document.getElementById("settingDropNotify");
+    const btnReset = document.getElementById("resetProfileSettings");
+    const birthdateInput = document.getElementById("settingBirthdate");
+
+    const today = new Date().toISOString().split("T")[0];
+    birthdateInput.setAttribute("max", today);
+
+    checkKv.checked = localProfile.getKvNotify();
+    checkDrop.checked = localProfile.getDropNotify();
+
+    btnSave.addEventListener("click", () => {
+        const bd = birthdateInput.value;
+        if (bd) {
+            const year = new Date(bd).getFullYear();
+            if (year < 1950) return showToast("Дата рождения не может быть раньше 1950 года", "error");
+            if (new Date(bd) > new Date()) return showToast("Дата рождения не может быть в будущем", "error");
+        }
+
+        localProfile.setCountry(document.getElementById("settingCountry").value);
+        localProfile.setRegion(document.getElementById("settingRegion").value);
+        localProfile.setCity(document.getElementById("settingCity").value);
+        localProfile.setBirthdate(bd);
+
+        loadPersonalInfo();
+        showToast("Данные профиля сохранены", "success");
+    });
+
+    checkKv.addEventListener("change", () => {
+        localProfile.setKvNotify(checkKv.checked);
+        showToast(checkKv.checked ? "Уведомления о КВ включены" : "Уведомления о КВ выключены", "info");
+    });
+
+    checkDrop.addEventListener("change", () => {
+        localProfile.setDropNotify(checkDrop.checked);
+        showToast(checkDrop.checked ? "Уведомления о «Выбросе» включены" : "Уведомления о «Выбросе» выключены", "info");
+    });
+
+    btnReset.addEventListener("click", () => {
+        if (!confirm("Сбросить все локальные настройки профиля?")) return;
+        localProfile.reset();
+        // Полный сброс селектов
+        document.getElementById("settingCountry").value = "";
+        document.getElementById("settingRegion").innerHTML = '<option value="">— Не выбрано —</option>';
+        document.getElementById("settingRegion").disabled = true;
+        document.getElementById("settingCity").innerHTML = '<option value="">— Не выбрано —</option>';
+        document.getElementById("settingCity").disabled = true;
+        birthdateInput.value = "";
+        
+        loadPersonalInfo();
+        checkKv.checked = true;
+        checkDrop.checked = true;
+        showToast("Настройки профиля сброшены", "success");
+    });
+}
+
+/* ==================== USER MENU ==================== */
+(function initUserMenu() {
+    const menu = document.getElementById("userMenu");
+    const toggle = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    if (!menu || !toggle || !dropdown) return;
+    dropdown.removeAttribute("hidden");
+    const isOpen = () => menu.classList.contains("open");
+    function open() { menu.classList.add("open"); toggle.setAttribute("aria-expanded", "true"); }
+    function close() { menu.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); }
+    toggle.addEventListener("click", (e) => { e.stopPropagation(); isOpen() ? close() : open(); });
+    document.addEventListener("click", (e) => { if (!menu.contains(e.target)) close(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen()) { close(); toggle.focus(); } });
+})();
+
+/* ==================== INIT ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    initGeography();
+    loadProfileStats();
+    initSettings();
+});
+</script>
+
+</body>
+</html>

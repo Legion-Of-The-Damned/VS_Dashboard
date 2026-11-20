@@ -1,0 +1,8 @@
+2026-11-05 00:37:30 | INFO     | run.py:63 | [socketio] Запущен с async_mode = threading
+2026-11-05 00:37:30 | INFO     | run.py:564 | 🚀 Сервер Legion Of The Damned запускается...
+2026-11-05 00:37:32 | INFO     | run.py:63 | [socketio] Запущен с async_mode = threading
+2026-11-05 00:37:32 | INFO     | run.py:564 | 🚀 Сервер Legion Of The Damned запускается...
+2026-11-05 00:37:36 | INFO     | run.py:120 | [maps] Загружено 0 действий из coniferous.json
+2026-11-05 00:37:36 | INFO     | run.py:413 | [socket] [LOTD] Infinity зашел на карту 'coniferous' (SID: FdszkyQA2X8pyCt8AAAB)
+2026-11-05 00:37:50 | INFO     | run.py:207 | ➡️ GET /
+2026-11-05 00:37:50 | INFO     | run.py:214 | ⬅️ 200 GET / (66.4ms)

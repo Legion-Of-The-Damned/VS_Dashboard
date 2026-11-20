@@ -2,33 +2,1216 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>О клане</title>
+    <title>О клане — Legion Of The Damned</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/discord-widget.css') }}">
+
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+    <style>
+        /* ==================== СТИЛИ СТРАНИЦЫ «О КЛАНЕ» ==================== */
+        .about-page {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #ccc;
+        }
+
+        /* --- HERO --- */
+        .about-hero {
+            position: relative;
+            background:
+                linear-gradient(135deg, rgba(185, 28, 28, 0.25) 0%, rgba(0, 0, 0, 0.85) 60%),
+                radial-gradient(circle at 80% 20%, rgba(185, 28, 28, 0.35) 0%, transparent 50%);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 60px 40px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .about-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 8px);
+            pointer-events: none;
+        }
+
+        .about-hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+        }
+
+        .about-hero-tag {
+            display: inline-block;
+            color: #b91c1c;
+            background: rgba(185, 28, 28, 0.12);
+            border: 1px solid rgba(185, 28, 28, 0.4);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .about-hero h1 {
+            font-family: "UnifrakturCook", cursive;
+            font-size: 3.2rem;
+            color: #fff;
+            margin: 0 0 15px;
+            line-height: 1.1;
+            letter-spacing: 1px;
+            text-shadow: 0 4px 20px rgba(185, 28, 28, 0.4);
+        }
+
+        .about-hero p {
+            font-size: 1.1rem;
+            color: #b8b8b8;
+            line-height: 1.7;
+            margin: 0 0 30px;
+        }
+
+        .about-hero-stats {
+            display: flex;
+            gap: 35px;
+            flex-wrap: wrap;
+        }
+
+        .about-hero-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .about-hero-stat-value {
+            color: #b91c1c;
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .about-hero-stat-label {
+            color: #777;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- СЕКЦИИ --- */
+        .about-section {
+            margin-bottom: 50px;
+        }
+
+        .about-section-title {
+            font-size: 1.8rem;
+            color: #fff;
+            margin: 0 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .about-section-title::before {
+            content: "";
+            width: 4px;
+            height: 28px;
+            background: #b91c1c;
+            border-radius: 2px;
+        }
+
+        .about-section-subtitle {
+            color: #777;
+            font-size: 0.95rem;
+            margin: 0 0 30px 16px;
+        }
+
+        /* --- ОПИСАНИЕ --- */
+        .about-description {
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px 35px;
+            line-height: 1.8;
+            font-size: 1rem;
+            color: #b8b8b8;
+        }
+
+        .about-description p {
+            margin: 0 0 16px;
+        }
+
+        .about-description p:last-child {
+            margin-bottom: 0;
+        }
+
+        .about-description strong {
+            color: #fff;
+        }
+
+        .about-description .accent {
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        /* --- ЦЕЛИ --- */
+        .about-goals {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .about-goal-card {
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 22px;
+            transition: border-color 0.25s, transform 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-goal-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #b91c1c, transparent);
+        }
+
+        .about-goal-card:hover {
+            border-color: #555;
+            transform: translateY(-3px);
+        }
+
+        .about-goal-icon {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .about-goal-title {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .about-goal-text {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* --- ВЕТКИ КЛАНА --- */
+        .branches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .branch-info-card {
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px 22px;
+            transition: border-color 0.25s, transform 0.25s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .branch-info-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #b91c1c, transparent);
+        }
+
+        .branch-info-card:hover {
+            border-color: #555;
+            transform: translateY(-3px);
+        }
+
+        .branch-info-icon {
+            font-size: 2rem;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .branch-info-game {
+            color: #b91c1c;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 6px;
+        }
+
+        .branch-info-name {
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .branch-info-desc {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0 0 15px;
+            flex: 1;
+        }
+
+        .branch-info-badge {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            background: rgba(185, 28, 28, 0.12);
+            color: #b91c1c;
+            border: 1px solid rgba(185, 28, 28, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        /* --- ИЕРАРХИЯ --- */
+        .hierarchy-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hierarchy-rank {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 16px 20px;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+        }
+
+        .hierarchy-rank:hover {
+            border-color: #b91c1c;
+            background: rgba(185, 28, 28, 0.06);
+        }
+
+        .hierarchy-rank-level {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
+        }
+
+        .hierarchy-rank-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .hierarchy-rank-name {
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.02rem;
+            margin-bottom: 3px;
+        }
+
+        .hierarchy-rank-desc {
+            color: #888;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Цвета уровней — от самого высокого к низшему */
+        .hierarchy-rank.level-1  .hierarchy-rank-level { background: linear-gradient(135deg, #fbbf24, #b45309); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35); }
+        .hierarchy-rank.level-2  .hierarchy-rank-level { background: linear-gradient(135deg, #f97316, #9a3412); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); }
+        .hierarchy-rank.level-3  .hierarchy-rank-level { background: linear-gradient(135deg, #a78bfa, #6d28d9); box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3); }
+        .hierarchy-rank.level-4  .hierarchy-rank-level { background: linear-gradient(135deg, #60a5fa, #1d4ed8); box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3); }
+        .hierarchy-rank.level-5  .hierarchy-rank-level { background: linear-gradient(135deg, #22d3ee, #0e7490); box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3); }
+        .hierarchy-rank.level-6  .hierarchy-rank-level { background: linear-gradient(135deg, #34d399, #047857); box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3); }
+        .hierarchy-rank.level-7  .hierarchy-rank-level { background: linear-gradient(135deg, #facc15, #a16207); box-shadow: 0 4px 12px rgba(250, 204, 21, 0.3); }
+        .hierarchy-rank.level-8  .hierarchy-rank-level { background: linear-gradient(135deg, #fb7185, #9f1239); box-shadow: 0 4px 12px rgba(251, 113, 133, 0.3); }
+        .hierarchy-rank.level-9  .hierarchy-rank-level { background: linear-gradient(135deg, #94a3b8, #475569); box-shadow: 0 4px 12px rgba(148, 163, 184, 0.3); }
+        .hierarchy-rank.level-10 .hierarchy-rank-level { background: linear-gradient(135deg, #6b7280, #374151); box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3); }
+
+        /* --- РУКОВОДСТВО --- */
+        .leaders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .leader-card {
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px 22px;
+            text-align: center;
+            transition: border-color 0.25s, transform 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .leader-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #b91c1c, transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .leader-card:hover {
+            border-color: #555;
+            transform: translateY(-4px);
+        }
+
+        .leader-card:hover::before {
+            opacity: 1;
+        }
+
+        .leader-avatar {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #b91c1c, #450a0a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "UnifrakturCook", cursive;
+            font-size: 2rem;
+            color: #fff;
+            border: 3px solid #333;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .leader-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .leader-name {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .leader-role {
+            color: #b91c1c;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
+        }
+
+        .leader-desc {
+            color: #888;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .leader-badge {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            background: rgba(185, 28, 28, 0.12);
+            color: #b91c1c;
+            border: 1px solid rgba(185, 28, 28, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        /* --- ПРАВИЛА --- */
+        .rules-list {
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px 25px;
+            counter-reset: rule;
+        }
+
+        .rule-item {
+            display: flex;
+            gap: 18px;
+            padding: 18px 0;
+            border-bottom: 1px solid #222;
+            align-items: flex-start;
+        }
+
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+
+        .rule-number {
+            counter-increment: rule;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(185, 28, 28, 0.12);
+            border: 1px solid rgba(185, 28, 28, 0.35);
+            color: #b91c1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .rule-number::before {
+            content: counter(rule);
+        }
+
+        .rule-text {
+            flex: 1;
+            color: #b8b8b8;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .rule-text strong {
+            color: #fff;
+        }
+
+        /* --- CTA --- */
+        .about-cta {
+            background:
+                linear-gradient(135deg, rgba(185, 28, 28, 0.25) 0%, rgba(0, 0, 0, 0.9) 70%),
+                radial-gradient(circle at 20% 50%, rgba(185, 28, 28, 0.3) 0%, transparent 60%);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-cta::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 8px);
+            pointer-events: none;
+        }
+
+        .about-cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .about-cta h2 {
+            font-family: "UnifrakturCook", cursive;
+            color: #fff;
+            font-size: 2.4rem;
+            margin: 0 0 15px;
+            letter-spacing: 1px;
+        }
+
+        .about-cta p {
+            color: #b8b8b8;
+            font-size: 1rem;
+            max-width: 560px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+
+        .about-cta-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .about-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .about-cta-btn.primary {
+            background: #b91c1c;
+            color: #fff;
+        }
+
+        .about-cta-btn.primary:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .about-cta-btn.secondary {
+            background: transparent;
+            color: #ccc;
+            border-color: #444;
+        }
+
+        .about-cta-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border-color: #666;
+        }
+
+        /* --- АДАПТИВ --- */
+        @media (max-width: 768px) {
+            .about-hero { padding: 40px 25px; }
+            .about-hero h1 { font-size: 2.3rem; }
+            .about-hero p { font-size: 1rem; }
+            .about-hero-stats { gap: 20px; }
+            .about-hero-stat-value { font-size: 1.4rem; }
+            .about-description { padding: 22px; }
+            .about-cta { padding: 35px 22px; }
+            .about-cta h2 { font-size: 1.8rem; }
+            .about-section-title { font-size: 1.5rem; }
+        }
+    </style>
 </head>
 <body>
 
+<div id="loader" class="show"></div>
+
+<div id="content" style="display:none;">
+
 <header>
     <h1>О клане</h1>
+
     <nav>
         <a href="{{ url_for('home') }}">Главная</a>
-        <a href="{{ url_for('dashboard') }}">Дашборд</a>
         <a href="{{ url_for('about') }}">О клане</a>
-        <a href="#" id="legionBeaconButton">Legion Beacon</a>
-        <a href="{{ url_for('kv_map') }}">Карты КВ</a>
+        <a href="{{ url_for('legion_beacon') }}">Legion Beacon</a>
+        <a href="{{ url_for('kv_map') }}" data-i18n="nav_kv_map">Карты КВ</a>
     </nav>
+
+    <div class="header-controls">
+
+        <div class="lang-switcher">
+            <select id="langSelect">
+                <option value="ua">UA</option>
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="auth-block">
+            {% if user %}
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=64' %}
+                {% endif %}
+
+                <div class="user-menu" id="userMenu">
+                    <button type="button"
+                            class="user-chip"
+                            id="userMenuToggle"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            title="{{ user.global_name or user.username }}">
+                        {% if avatar_url %}
+                            <img src="{{ avatar_url }}" alt="">
+                        {% else %}
+                            <span class="user-initial">{{ (user.global_name or user.username)[0]|upper }}</span>
+                        {% endif %}
+                        <span class="user-name">{{ user.global_name or user.username }}</span>
+                    </button>
+
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item user-dropdown-logout" data-i18n="auth_logout">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="discord-btn discord-btn-login"
+                   data-i18n-title="auth_login_title"
+                   title="Войти через Discord">
+                    <svg width="18" height="18" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+                        <path d="M60.1 4.9A58.9 58.9 0 0 0 45.4.4a.2.2 0 0 0-.2.1 40.6 40.6 0 0 0-1.8 3.7 54.5 54.5 0 0 0-16.3 0A38.7 38.7 0 0 0 25.3.5a.2.2 0 0 0-.2-.1 58.7 58.7 0 0 0-14.7 4.5.2.2 0 0 0-.1.1A60.3 60.3 0 0 0 .4 45.6a.2.2 0 0 0 .1.2 59.2 59.2 0 0 0 17.8 9 .2.2 0 0 0 .2-.1 42.8 42.8 0 0 0 3.7-6 .2.2 0 0 0-.1-.3 39.1 39.1 0 0 1-5.6-2.7.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42.2 42.2 0 0 0 35.8 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.7 36.7 0 0 1-5.6 2.7.2.2 0 0 0-.1.3 48.1 48.1 0 0 0 3.7 6 .2.2 0 0 0 .2.1 59 59 0 0 0 17.8-9 .2.2 0 0 0 .1-.2 59.9 59.9 0 0 0-10-40.6.2.2 0 0 0-.1-.1ZM23.7 37.4c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Z"/>
+                    </svg>
+                    <span data-i18n="auth_login">Войти</span>
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
 </header>
 
-<main>
-    <h2>Страница в разработке</h2>
-    <p>Контент этой страницы пока недоступен.</p>
+<main class="about-page">
+
+    <!-- ==================== HERO ==================== -->
+    <section class="about-hero">
+        <div class="about-hero-content">
+            <span class="about-hero-tag">⚔️ Мультиигровой клан · Основан в 2021</span>
+            <h1>Legion Of The Damned</h1>
+            <p>
+                Мы — сплочённое сообщество игроков, объединённых общей целью: доминировать на поле боя,
+                поддерживать друг друга и расти вместе. Дисциплина, взаимовыручка и уважение — три
+                столпа, на которых держится Легион.
+            </p>
+            <div class="about-hero-stats">
+                <div class="about-hero-stat">
+                    <div class="about-hero-stat-value" id="heroMembers">120+</div>
+                    <div class="about-hero-stat-label">Участников</div>
+                </div>
+                <div class="about-hero-stat">
+                    <div class="about-hero-stat-value">4</div>
+                    <div class="about-hero-stat-label">Ветки клана</div>
+                </div>
+                <div class="about-hero-stat">
+                    <div class="about-hero-stat-value">2021</div>
+                    <div class="about-hero-stat-label">Год основания</div>
+                </div>
+                <div class="about-hero-stat">
+                    <div class="about-hero-stat-value">24/7</div>
+                    <div class="about-hero-stat-label">Онлайн-ядро</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== ОПИСАНИЕ ==================== -->
+    <section class="about-section">
+        <h2 class="about-section-title">Кто мы</h2>
+        <p class="about-section-subtitle">История и философия Легиона</p>
+
+        <div class="about-description">
+            <p>
+                <strong>Legion Of The Damned</strong> — это не просто клан, это <span class="accent">братство по оружию</span>.
+                Мы начинали как небольшая группа единомышленников, а сегодня превратились в один из самых
+                организованных кланов сразу в нескольких играх. Наша структура построена по военному принципу:
+                чёткая иерархия, разделение на ветки, дисциплина и ответственность каждого.
+            </p>
+            <p>
+                Мы ценим <strong>активность</strong>, <strong>инициативность</strong> и <strong>готовность учиться</strong>.
+                Новички получают наставника, проходят адаптацию и постепенно поднимаются по
+                карьерной лестнице. Ветераны, доказавшие преданность клану, становятся офицерами и
+                занимаются стратегией, набором и обучением.
+            </p>
+            <p>
+                Наш девиз: <span class="accent">«Mors Vincit Omnia»</span> — «Смерть побеждает всё».
+                Мы не сдаёмся, не бросаем своих и идём до конца в любом бою.
+            </p>
+        </div>
+    </section>
+
+    <!-- ==================== ЦЕЛИ ==================== -->
+    <section class="about-section">
+        <h2 class="about-section-title">Наши цели</h2>
+        <p class="about-section-subtitle">То, к чему мы стремимся каждый день</p>
+
+        <div class="about-goals">
+            <div class="about-goal-card">
+                <span class="about-goal-icon">🏆</span>
+                <div class="about-goal-title">Доминирование в PvP</div>
+                <p class="about-goal-text">
+                    Регулярное участие в клановых войнах, отработка тактик и захват ключевых точек на всех серверах.
+                </p>
+            </div>
+            <div class="about-goal-card">
+                <span class="about-goal-icon">🛡️</span>
+                <div class="about-goal-title">Сильный коллектив</div>
+                <p class="about-goal-text">
+                    Формирование костяка из активных игроков, которые прикрывают друг друга и разделяют общие ценности.
+                </p>
+            </div>
+            <div class="about-goal-card">
+                <span class="about-goal-icon">📈</span>
+                <div class="about-goal-title">Рост каждого</div>
+                <p class="about-goal-text">
+                    Обучение новичков, обмен опытом, разбор ошибок. Мы хотим, чтобы каждый стал сильнее.
+                </p>
+            </div>
+            <div class="about-goal-card">
+                <span class="about-goal-icon">🌐</span>
+                <div class="about-goal-title">Присутствие во всех играх</div>
+                <p class="about-goal-text">
+                    Ветки клана в STALZONE, WoW Firestorm и Eternal Crusade — единый Легион без границ.
+                </p>
+            </div>
+            <div class="about-goal-card">
+                <span class="about-goal-icon">🤝</span>
+                <div class="about-goal-title">Сообщество вне игры</div>
+                <p class="about-goal-text">
+                    Активный Discord, совместные события, мемы, обсуждения и просто хорошая атмосфера.
+                </p>
+            </div>
+            <div class="about-goal-card">
+                <span class="about-goal-icon">⚖️</span>
+                <div class="about-goal-title">Честная игра</div>
+                <p class="about-goal-text">
+                    Никакого читерства, токсичности и предательства. Репутация клана — превыше всего.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== ВЕТКИ КЛАНА ==================== -->
+    <section class="about-section">
+        <h2 class="about-section-title">Ветки клана</h2>
+        <p class="about-section-subtitle">Подразделения Legion Of The Damned в разных играх</p>
+
+        <div class="branches-grid">
+
+            <div class="branch-info-card">
+                <span class="branch-info-icon">⚔️</span>
+                <div class="branch-info-game">STALZONE · Подразделение</div>
+                <div class="branch-info-name">Legion Of The Damned</div>
+                <p class="branch-info-desc">
+                    Основное подразделение клана в STALZONE. Флагманское направление, ядро Легиона
+                    и центр стратегического управления.
+                </p>
+                <span class="branch-info-badge">Основное</span>
+            </div>
+
+            <div class="branch-info-card">
+                <span class="branch-info-icon">💀</span>
+                <div class="branch-info-game">STALZONE · Подклан</div>
+                <div class="branch-info-name">Korps Of Death</div>
+                <p class="branch-info-desc">
+                    Элитное подразделение внутри STALZONE. Отдельный устав, усиленная дисциплина,
+                    более жёсткий отбор бойцов.
+                </p>
+                <span class="branch-info-badge">Подклан</span>
+            </div>
+
+            <div class="branch-info-card">
+                <span class="branch-info-icon">🛡️</span>
+                <div class="branch-info-game">World Of Warcraft · Firestorm</div>
+                <div class="branch-info-name">Гильдия Legion Of The Damned</div>
+                <p class="branch-info-desc">
+                    Гильдия клана на сервере Firestorm. Рейды, PvP-арены, прокачка и совместный
+                    прогресс на максимальном уровне.
+                </p>
+                <span class="branch-info-badge">Гильдия</span>
+            </div>
+
+            <div class="branch-info-card">
+                <span class="branch-info-icon">🔥</span>
+                <div class="branch-info-game">Eternal Crusade · Resurrections</div>
+                <div class="branch-info-name">Орден Legion Of The Damned</div>
+                <p class="branch-info-desc">
+                    Орден клана в Eternal Crusade Resurrections. Массовые сражения, захват
+                    секторов и защита интересов Легиона.
+                </p>
+                <span class="branch-info-badge">Орден</span>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==================== ИЕРАРХИЯ ==================== -->
+    <section class="about-section">
+        <h2 class="about-section-title">Иерархия</h2>
+        <p class="about-section-subtitle">Звания клана — сверху вниз, от Магистра до Неофита</p>
+
+        <div class="hierarchy-list">
+
+            <div class="hierarchy-rank level-1">
+                <div class="hierarchy-rank-level">🔥</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Огненный Магистр</div>
+                    <div class="hierarchy-rank-desc">
+                        Главный лидер клана. Отвечает за общее управление, развитие и принятие ключевых решений.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-2">
+                <div class="hierarchy-rank-level">⭐</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Заместитель Магистра</div>
+                    <div class="hierarchy-rank-desc">
+                        Правая рука Магистра. Помогает управлять кланом и исполняет обязанности Магистра при необходимости.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-3">
+                <div class="hierarchy-rank-level">📚</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Библиарий</div>
+                    <div class="hierarchy-rank-desc">
+                        Советник Магистра.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-4">
+                <div class="hierarchy-rank-level">🎖️</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Командор</div>
+                    <div class="hierarchy-rank-desc">
+                        Лидер своего подразделения. Руководит бойцами и отвечает за организацию своего отделения.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-5">
+                <div class="hierarchy-rank-level">⛪</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Капелан</div>
+                    <div class="hierarchy-rank-desc">
+                        Судья и священнослужитель клана. Следит за соблюдением устава и принимает участие
+                        в разрешении спорных ситуаций.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-6">
+                <div class="hierarchy-rank-level">🪖</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Полковник</div>
+                    <div class="hierarchy-rank-desc">
+                        Старший офицер. Имеет навыки руководителя, организации боевых действий и постановки
+                        и застройки палаток.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-7">
+                <div class="hierarchy-rank-level">⚒️</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Кузнец душ</div>
+                    <div class="hierarchy-rank-desc">
+                        Технический администратор или программист клана. Создаёт, обслуживает и улучшает
+                        техническую инфраструктуру.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-8">
+                <div class="hierarchy-rank-level">🎯</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Офицер подразделения</div>
+                    <div class="hierarchy-rank-desc">
+                        Офицер, отвечающий за управление и организацию своего отряда.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-9">
+                <div class="hierarchy-rank-level">🛡️</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Зам. офицера</div>
+                    <div class="hierarchy-rank-desc">
+                        Помощник офицера подразделения.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-10">
+                <div class="hierarchy-rank-level">⚔️</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Боевой Брат</div>
+                    <div class="hierarchy-rank-desc">
+                        Все обычные члены клана.
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-rank level-10">
+                <div class="hierarchy-rank-level">🌱</div>
+                <div class="hierarchy-rank-body">
+                    <div class="hierarchy-rank-name">Неофит</div>
+                    <div class="hierarchy-rank-desc">
+                        Новичок, который ещё не прошёл полноценное вступление в клан.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==================== РУКОВОДСТВО ==================== -->
+    <section class="about-section">
+        <h2 class="about-section-title">Руководящий состав</h2>
+        <p class="about-section-subtitle">Те, кто ведёт Легион вперёд</p>
+
+        <div class="leaders-grid">
+            <div class="leader-card">
+                <div class="leader-avatar">L</div>
+                <div class="leader-name">Legatus</div>
+                <div class="leader-role">Огненный Магистр</div>
+                <p class="leader-desc">Основатель Легиона. Стратег, дипломат, голос клана на всех уровнях.</p>
+                <span class="leader-badge">Основатель</span>
+            </div>
+
+            <div class="leader-card">
+                <div class="leader-avatar">V</div>
+                <div class="leader-name">Vindicator</div>
+                <div class="leader-role">Заместитель Магистра</div>
+                <p class="leader-desc">Правая рука Магистра. Курирует ветки, дисциплину и стратегические вопросы.</p>
+                <span class="leader-badge">Штаб</span>
+            </div>
+
+            <div class="leader-card">
+                <div class="leader-avatar">S</div>
+                <div class="leader-name">Shadow</div>
+                <div class="leader-role">Библиарий</div>
+                <p class="leader-desc">Советник Магистра. Хранитель устава и внутренней истории клана.</p>
+                <span class="leader-badge">Совет</span>
+            </div>
+
+            <div class="leader-card">
+                <div class="leader-avatar">W</div>
+                <div class="leader-name">Wraith</div>
+                <div class="leader-role">Кузнец душ</div>
+                <p class="leader-desc">Технический администратор. Обслуживает ботов, сайт и инфраструктуру.</p>
+                <span class="leader-badge">Техотдел</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== ПРАВИЛА ==================== -->
+    <section class="about-section">
+        <h2 class="about-section-title">Правила клана</h2>
+        <p class="about-section-subtitle">Коротко и по делу — то, что обязан соблюдать каждый</p>
+
+        <div class="rules-list">
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Уважение прежде всего.</strong> Никаких оскорблений, провокаций и токсичности
+                    в чате и на поле боя. Мы воюем с врагом, а не друг с другом.
+                </div>
+            </div>
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Активность.</strong> Минимум 3-4 часа в неделю и участие в клановых событиях.
+                    Если уходишь — предупреди офицера.
+                </div>
+            </div>
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Дисциплина на КВ.</strong> Приказы командира отряда выполняются без обсуждения
+                    в момент боя. Разбор — после.
+                </div>
+            </div>
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Никакого читерства и стороннего ПО.</strong> Нарушение — мгновенный бан без
+                    права восстановления.
+                </div>
+            </div>
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Конфиденциальность.</strong> Внутренние тактики, составы и планы не выходят
+                    за пределы клана.
+                </div>
+            </div>
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Помощь своим.</strong> Если соклановец просит поддержки — помоги. Легион силён
+                    единством.
+                </div>
+            </div>
+            <div class="rule-item">
+                <span class="rule-number"></span>
+                <div class="rule-text">
+                    <strong>Решение офицеров — закон.</strong> Спорные ситуации разбираются через
+                    руководство, а не в общем чате.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CTA ==================== -->
+    <section class="about-cta">
+        <div class="about-cta-content">
+            <h2>Готов стать частью Легиона?</h2>
+            <p>
+                Если ты разделяешь наши ценности, любишь командную игру и готов расти —
+                мы ждём тебя. Подай заявку через Discord или зайди в голосовой канал познакомиться.
+            </p>
+            <div class="about-cta-buttons">
+                <a href="{{ url_for('login') }}" class="about-cta-btn primary">
+                    ⚔️ Подать заявку
+                </a>
+                <a href="{{ url_for('legion_beacon') }}" class="about-cta-btn secondary">
+                    🤖 Открыть Legion Beacon
+                </a>
+            </div>
+        </div>
+    </section>
+
 </main>
 
+</div>
+
+<script src="{{ url_for('static', filename='js/discord-widget.js') }}"></script>
+
 <script>
-document.getElementById('legionBeaconButton').addEventListener('click', function(e){
-    e.preventDefault();
-    alert('Страница Legion Beacon пока в разработке!');
+/* ==================== ЕДИНЫЙ LOADER ==================== */
+window.addEventListener("load", () => {
+    document.getElementById("loader").classList.add("hide");
+    setTimeout(() => {
+        document.getElementById("content").style.display = "block";
+    }, 500);
 });
+
+/* 🌍 JSON локализация */
+const supportedLangs = ["ru", "ua", "en"];
+let dictionary = {};
+let currentDiscordLang = "ru";
+
+async function loadLanguage(lang){
+    if(!supportedLangs.includes(lang)) lang="ru";
+
+    try {
+        const res = await fetch(`/static/locales/${lang}.json`);
+        dictionary = await res.json();
+    } catch {
+        const res = await fetch(`/static/locales/ru.json`);
+        dictionary = await res.json();
+        lang = "ru";
+    }
+
+    document.documentElement.lang = lang;
+    localStorage.setItem("lang", lang);
+    document.getElementById("langSelect").value = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const key = el.dataset.i18n;
+        if(dictionary[key]) el.textContent = dictionary[key];
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach(el=>{
+        const key = el.dataset.i18nTitle;
+        if(dictionary[key]) el.title = dictionary[key];
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+        const key = el.dataset.i18nPlaceholder;
+        if(dictionary[key]) el.placeholder = dictionary[key];
+    });
+
+    if(currentDiscordLang !== lang){
+        currentDiscordLang = lang;
+        if (typeof loadDiscordWidget === "function") {
+            loadDiscordWidget(lang);
+        }
+    }
+}
+
+function detectLanguage(){
+    const saved=localStorage.getItem("lang");
+    if(saved && supportedLangs.includes(saved)) return saved;
+    const browser=navigator.language.slice(0,2);
+    if(supportedLangs.includes(browser)) return browser;
+    return "ru";
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    loadLanguage(detectLanguage());
+    document.getElementById("langSelect")
+        .addEventListener("change",e=>loadLanguage(e.target.value));
+});
+
+/* ---------- Живой счётчик участников ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+    const el = document.getElementById("heroMembers");
+    if (!el) return;
+
+    // TODO: заменить на fetch('/api/clan/stats') с реальными данными
+    const target = 120;
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 40));
+    const interval = setInterval(() => {
+        current += step;
+        if (current >= target) {
+            current = target;
+            clearInterval(interval);
+        }
+        el.textContent = current + "+";
+    }, 30);
+});
+
+/* ---------- User menu dropdown ---------- */
+(function initUserMenu() {
+    const menu     = document.getElementById("userMenu");
+    const toggle   = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    if (!menu || !toggle || !dropdown) return;
+
+    dropdown.removeAttribute("hidden");
+
+    const isOpen = () => menu.classList.contains("open");
+
+    function open() {
+        menu.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+    }
+    function close() {
+        menu.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+    }
+
+    toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isOpen() ? close() : open();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!menu.contains(e.target)) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isOpen()) {
+            close();
+            toggle.focus();
+        }
+    });
+})();
 </script>
 
 </body>

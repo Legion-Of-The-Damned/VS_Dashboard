@@ -19,6 +19,10 @@
   "tos": "Terms of Service",
   "privacy": "Privacy Policy",
 
+  "auth_login": "Log in",
+  "auth_login_title": "Log in with Discord",
+  "auth_logout": "Log out",
+
   "bot_commands": {
     "Main Functions": [
       "Welcome new members",
