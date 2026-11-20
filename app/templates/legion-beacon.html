@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Legion Beacon — Legion Of The Damned</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/discord-widget.css">
+    <link rel="stylesheet" href="static/css/beacon.css">
+
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+</head>
+<body>
+
+<div id="loader" class="show"></div>
+
+<div id="content" style="display:none;">
+
+<header>
+    <h1>Legion Of The Damned</h1>
+
+    <nav>
+        <a href="{{ url_for('home') }}">Главная</a>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="{{ url_for('legion_beacon') }}">Legion Beacon</a>
+        <a href="/kv-map" data-i18n="nav_kv_map">Карты КВ</a>
+    </nav>
+
+    <div class="header-controls">
+
+        <div class="lang-switcher">
+            <select id="langSelect">
+                <option value="ua">UA</option>
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="auth-block">
+            {% if user %}
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=64' %}
+                {% endif %}
+
+                <div class="user-menu" id="userMenu">
+                    <button type="button"
+                            class="user-chip"
+                            id="userMenuToggle"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            title="{{ user.global_name or user.username }}">
+                        {% if avatar_url %}
+                            <img src="{{ avatar_url }}" alt="">
+                        {% else %}
+                            <span class="user-initial">{{ (user.global_name or user.username)[0]|upper }}</span>
+                        {% endif %}
+                        <span class="user-name">{{ user.global_name or user.username }}</span>
+                    </button>
+
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item user-dropdown-logout" data-i18n="auth_logout">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="discord-btn discord-btn-login"
+                   data-i18n-title="auth_login_title"
+                   title="Войти через Discord">
+                    <svg width="18" height="18" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+                        <path d="M60.1 4.9A58.9 58.9 0 0 0 45.4.4a.2.2 0 0 0-.2.1 40.6 40.6 0 0 0-1.8 3.7 54.5 54.5 0 0 0-16.3 0A38.7 38.7 0 0 0 25.3.5a.2.2 0 0 0-.2-.1 58.7 58.7 0 0 0-14.7 4.5.2.2 0 0 0-.1.1A60.3 60.3 0 0 0 .4 45.6a.2.2 0 0 0 .1.2 59.2 59.2 0 0 0 17.8 9 .2.2 0 0 0 .2-.1 42.8 42.8 0 0 0 3.7-6 .2.2 0 0 0-.1-.3 39.1 39.1 0 0 1-5.6-2.7.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42.2 42.2 0 0 0 35.8 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.7 36.7 0 0 1-5.6 2.7.2.2 0 0 0-.1.3 48.1 48.1 0 0 0 3.7 6 .2.2 0 0 0 .2.1 59 59 0 0 0 17.8-9 .2.2 0 0 0 .1-.2 59.9 59.9 0 0 0-10-40.6.2.2 0 0 0-.1-.1ZM23.7 37.4c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Z"/>
+                    </svg>
+                    <span data-i18n="auth_login">Войти</span>
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+</header>
+
+<main class="beacon-page">
+    <div class="beacon-layout">
+
+        <!-- ==================== ЛЕВАЯ КОЛОНКА: ФОРМА ==================== -->
+        <form id="webhookForm" class="beacon-card" autocomplete="off">
+
+            <!-- 0. ПРЕСЕТЫ -->
+            <div class="beacon-section">
+                <h3>0. Пресеты</h3>
+                <div class="preset-panel">
+                    <button type="button" class="preset-btn" id="presetSaveBtn">💾 Сохранить в файл</button>
+                    <button type="button" class="preset-btn" id="presetLoadBtn">📂 Загрузить из файла</button>
+                    <input type="file" id="presetFileInput" accept="application/json,.json" hidden>
+                    <span id="presetFileName" class="preset-hint"></span>
+                </div>
+            </div>
+
+            <!-- 1. ВЕБХУК -->
+            <div class="beacon-section">
+                <h3>1. Webhook</h3>
+
+                <label for="whUrl">Ссылка на вебхук *</label>
+                <input type="url" id="whUrl" required
+                       placeholder="https://discord.com/api/webhooks/...">
+                <div class="beacon-hint">
+                    Discord → Настройки канала → Интеграции → Вебхуки → Копировать URL
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label for="whUsername">Имя пользователя</label>
+                        <input type="text" id="whUsername" maxlength="80"
+                               placeholder="Legion Beacon">
+                    </div>
+                    <div class="col">
+                        <label for="whAvatar">URL аватара</label>
+                        <input type="url" id="whAvatar"
+                               placeholder="https://example.com/avatar.png">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ОСНОВНОЙ ТЕКСТ -->
+            <div class="beacon-section">
+                <h3>2. Сообщение</h3>
+
+                <label for="whContent">Обычный текст (вне embed)</label>
+                <textarea id="whContent" maxlength="2000"
+                          placeholder="Текст, который пойдёт как обычное сообщение..."></textarea>
+
+                <label for="whMention">Упоминание</label>
+                <select id="whMention">
+                    <option value="none">Без упоминания</option>
+                    <option value="@here">@here</option>
+                    <option value="@everyone">@everyone</option>
+                    <option value="custom">Своё (введите ниже)</option>
+                </select>
+                <input type="text" id="whMentionCustom"
+                       class="hidden"
+                       placeholder="&lt;@123456789012345678&gt; или &lt;@&amp;ROLE_ID&gt;">
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="whTts"> TTS (озвучить текст)
+                </label>
+            </div>
+
+            <!-- 3. EMBEDS -->
+            <div class="beacon-section">
+                <div class="embeds-header">
+                    <h3>3. Embeds</h3>
+                </div>
+                <div class="beacon-hint beacon-hint-block">
+                    Embed — цветной блок с заголовком, описанием, полями и картинкой. Можно добавить несколько.
+                </div>
+                <div id="embedsContainer"></div>
+
+                <!-- Кнопка добавления embed внизу -->
+                <div class="embeds-footer">
+                    <button type="button" class="btn-add-embed" id="addEmbedBtnBottom">
+                        + Добавить embed
+                    </button>
+                </div>
+            </div>
+
+            <div class="beacon-actions">
+                <button type="submit" id="whSubmit" class="join-button">Отправить в Discord</button>
+                <button type="button" id="whClear" class="join-button beacon-clear">Очистить</button>
+            </div>
+
+            <div id="whStatus" class="beacon-status"></div>
+        </form>
+
+        <!-- ==================== ПРАВАЯ КОЛОНКА: ПРЕВЬЮ ==================== -->
+        <div class="beacon-preview">
+            <h3>Предпросмотр</h3>
+            <div class="discord-preview">
+                <div id="dcPreview" class="dc-empty">
+                    Начните заполнять форму — здесь появится предпросмотр сообщения
+                </div>
+            </div>
+            <p class="dc-preview-hint">Так сообщение будет выглядеть в Discord</p>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <div class="footer-container">
+        <div class="footer-column">
+            <h3 data-i18n="footer_socials">Соцсети</h3>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/@legion_of_the_damned" target="_blank">TikTok</a>
+                <a href="https://steamcommunity.com/groups/clandamned" target="_blank">Steam</a>
+                <a href="https://www.twitch.tv/legion_of_damned" target="_blank">Twitch</a>
+                <a href="https://www.youtube.com/@Guild_LOTD" target="_blank">YouTube</a>
+            </div>
+        </div>
+        <div class="footer-column">
+            <h3 data-i18n="footer_contacts">Контакты</h3>
+            <p>Email: <a href="mailto:lotdlegionarydamned@gmail.com">lotdlegionarydamned@gmail.com</a></p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p data-i18n="footer">© 2026 Legion Of The Damned</p>
+        <p class="clan-motto" id="clanMotto"></p>
+    </div>
+</footer>
+
+</div>
+
+<!-- ==================== ОБЩИЕ СКРИПТЫ СТРАНИЦЫ ==================== -->
+<script>
+/* ==================== Loader ==================== */
+window.addEventListener("load", () => {
+    document.getElementById("loader").classList.add("hide");
+    setTimeout(() => document.getElementById("content").style.display = "block", 500);
+});
+
+/* ==================== Локализация ==================== */
+const supportedLangs = ["ru", "ua", "en"];
+let dictionary = {};
+
+async function loadLanguage(lang){
+    if(!supportedLangs.includes(lang)) lang = "ru";
+    try {
+        const res = await fetch(`/static/locales/${lang}.json`);
+        dictionary = await res.json();
+    } catch {
+        const res = await fetch(`/static/locales/ru.json`);
+        dictionary = await res.json();
+        lang = "ru";
+    }
+    document.documentElement.lang = lang;
+    localStorage.setItem("lang", lang);
+    document.getElementById("langSelect").value = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        if(dictionary[key]) el.textContent = dictionary[key];
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if(dictionary[key]) el.placeholder = dictionary[key];
+    });
+    const motto = document.getElementById("clanMotto");
+    if(motto && dictionary.footer_motto) motto.textContent = dictionary.footer_motto;
+}
+
+function detectLanguage(){
+    const saved = localStorage.getItem("lang");
+    if(saved && supportedLangs.includes(saved)) return saved;
+    const browser = navigator.language.slice(0,2);
+    if(supportedLangs.includes(browser)) return browser;
+    return "ru";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadLanguage(detectLanguage());
+    document.getElementById("langSelect")
+        .addEventListener("change", e => loadLanguage(e.target.value));
+});
+
+/* ==================== User menu dropdown ==================== */
+(function initUserMenu() {
+    const menu     = document.getElementById("userMenu");
+    const toggle   = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    if (!menu || !toggle || !dropdown) return;
+
+    dropdown.removeAttribute("hidden");
+
+    const isOpen = () => menu.classList.contains("open");
+
+    function open() {
+        menu.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+    }
+    function close() {
+        menu.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+    }
+
+    toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isOpen() ? close() : open();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!menu.contains(e.target)) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isOpen()) {
+            close();
+            toggle.focus();
+        }
+    });
+})();
+</script>
+
+<!-- ==================== ЛОГИКА LEGION BEACON ==================== -->
+<script src="{{ url_for('static', filename='js/beacon.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Карты КВ — Планирование</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/cw_map.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <style>
+        /* Обновленная шапка */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(20, 20, 20, 0.95);
+            padding: 12px 30px;
+            border-bottom: 2px solid #e60000;
+            box-shadow: 0 4px 20px rgba(230, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2em;
+            font-family: 'UnifrakturCook', cursive;
+            color: #e60000;
+            text-shadow: 0 0 10px rgba(230, 0, 0, 0.8);
+            letter-spacing: 1px;
+        }
+        
+        header h1 a { color: inherit; text-decoration: none; }
+
+        header nav {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+
+        header nav a {
+            color: #e60000;
+            text-decoration: none;
+            font-size: 0.95em;
+            font-weight: 600;
+            padding: 6px 14px;
+            border: 1px solid rgba(230, 0, 0, 0.5);
+            border-radius: 6px;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+
+        header nav a:hover,
+        header nav a.active {
+            background-color: #e60000;
+            color: #000;
+            border-color: #e60000;
+            box-shadow: 0 0 15px rgba(230, 0, 0, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+
+        .lang-switcher select {
+            background-color: #111;
+            color: #e60000;
+            border: 1px solid #e60000;
+            font-size: 0.9em;
+            font-weight: bold;
+            padding: 6px 30px 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='%23e60000' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-switcher select:hover, .lang-switcher select:focus {
+            outline: none;
+            background-color: #1a0000;
+            box-shadow: 0 0 12px rgba(230, 0, 0, 0.5);
+        }
+
+        /* =========================================================
+           СТИЛИ АККАУНТА (КАК НА ГЛАВНОЙ)
+           ========================================================= */
+        .auth-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 16px;
+        }
+
+        .discord-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            text-decoration: none;
+            color: #e60000;
+            background-color: transparent;
+            border: 1px solid rgba(230, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        .discord-btn:hover { 
+            background-color: #e60000; 
+            color: #000; 
+            border-color: #e60000;
+            box-shadow: 0 0 15px rgba(230, 0, 0, 0.8); 
+            transform: translateY(-1px);
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Кнопка профиля в стиле навигации */
+        .user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background-color: transparent;
+            border: 1px solid rgba(230, 0, 0, 0.5);
+            border-radius: 6px;
+            color: #e60000;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            outline: none;
+            box-shadow: none;
+        }
+
+        /* Эффект при наведении и когда меню открыто */
+        .user-chip:hover,
+        .user-chip:focus-visible,
+        .user-menu.open .user-chip {
+            background-color: #e60000;
+            color: #000;
+            border-color: #e60000;
+            box-shadow: 0 0 15px rgba(230, 0, 0, 0.8);
+            transform: translateY(-1px);
+        }
+
+        /* Аватарка внутри кнопки */
+        .user-chip img,
+        .user-chip .user-initial {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid currentColor;
+            object-fit: cover;
+        }
+
+        .user-chip .user-initial {
+            background-color: #e60000;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .user-chip:hover .user-initial {
+            background-color: #000;
+            color: #e60000;
+            border-color: #000;
+        }
+
+        .user-chip .user-name {
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        /* Стрелка-индикатор */
+        .user-chip::after {
+            content: '';
+            display: inline-block;
+            margin-left: 4px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid currentColor;
+            transition: transform 0.25s ease;
+        }
+        
+        .user-menu.open .user-chip::after {
+            transform: rotate(180deg);
+        }
+
+        /* Выпадающее меню */
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 200px;
+            background: #111111;
+            border: 1px solid #e60000;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(230, 0, 0, 0.6);
+            padding: 6px 0;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .user-dropdown[hidden] { 
+            display: block; 
+        }
+
+        .user-menu.open .user-dropdown {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Элементы меню */
+        .user-dropdown-item {
+            display: block;
+            padding: 10px 18px;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.92em;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(230, 0, 0, 0.15);
+            color: #fff;
+            outline: none;
+        }
+
+        .user-dropdown-logout {
+            color: #e60000;
+            font-weight: 600;
+            border-top: 1px solid rgba(230, 0, 0, 0.2);
+            margin-top: 4px;
+            padding-top: 12px;
+        }
+
+        .user-dropdown-logout:hover {
+            background: #e60000;
+            color: #000;
+        }
+
+        .map-container { height: calc(100vh - 68px); }
+    </style>
+</head>
+<body>
+
+<script>
+    window.__USER__ = {
+        id:   "{{ user.id if user else '' }}",
+        name: "{{ (user.global_name or user.username) if user else 'Гость' }}",
+        authorized: {{ 'true' if user else 'false' }}
+    };
+</script>
+
+<header>
+    <h1><a href="/">Карты КВ — Планирование</a></h1>
+
+    <nav>
+        <a href="{{ url_for('home') }}" data-i18n="nav_index">Главная</a>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="{{ url_for('legion_beacon') }}">Legion Beacon</a>
+        <a href="/kv-map" class="active">Карты КВ</a>
+    </nav>
+
+    <div class="header-controls">
+        <div class="lang-switcher">
+            <select id="langSelect" onchange="window.location.href='/kv-map'">
+                <option value="ru">RU</option>
+                <option value="ua">UA</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="auth-block">
+            {% if user %}
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=64' %}
+                {% endif %}
+
+                <div class="user-menu" id="userMenu">
+                    <button type="button" class="user-chip" id="userMenuToggle" aria-haspopup="true" aria-expanded="false" title="{{ user.global_name or user.username }}">
+                        {% if avatar_url %}
+                            <img src="{{ avatar_url }}" alt="">
+                        {% else %}
+                            <span class="user-initial">{{ (user.global_name or user.username)[0]|upper }}</span>
+                        {% endif %}
+                        <span class="user-name">{{ user.global_name or user.username }}</span>
+                    </button>
+
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item user-dropdown-logout">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="discord-btn discord-btn-login" title="Войти через Discord">
+                    <svg width="18" height="18" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+                        <path d="M60.1 4.9A58.9 58.9 0 0 0 45.4.4a.2.2 0 0 0-.2.1 40.6 40.6 0 0 0-1.8 3.7 54.5 54.5 0 0 0-16.3 0A38.7 38.7 0 0 0 25.3.5a.2.2 0 0 0-.2-.1 58.7 58.7 0 0 0-14.7 4.5.2.2 0 0 0-.1.1A60.3 60.3 0 0 0 .4 45.6a.2.2 0 0 0 .1.2 59.2 59.2 0 0 0 17.8 9 .2.2 0 0 0 .2-.1 42.8 42.8 0 0 0 3.7-6 .2.2 0 0 0-.1-.3 39.1 39.1 0 0 1-5.6-2.7.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42.2 42.2 0 0 0 35.8 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.7 36.7 0 0 1-5.6 2.7.2.2 0 0 0-.1.3 48.1 48.1 0 0 0 3.7 6 .2.2 0 0 0 .2.1 59 59 0 0 0 17.8-9 .2.2 0 0 0 .1-.2 59.9 59.9 0 0 0-10-40.6.2.2 0 0 0-.1-.1ZM23.7 37.4c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Z"/>
+                    </svg>
+                    <span>Войти</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="progress-text" id="loadingProgress" style="display: none;"></div>
+</div>
+
+<div id="mapChooseScreen" class="map-choose-screen">
+    <h2>Выберите карту</h2>
+    <h3 class="category-title">STALZONE</h3>
+    <div class="map-grid">
+        <div class="map-card" onclick="openMap('coniferous')">
+            <img src="/static/img/maps/STALZONE/coniferous/preview.png" alt="Хвойный">
+            <div class="map-name">Хвойный</div>
+            <div class="map-editors" data-map-id="coniferous"></div>
+        </div>
+        <div class="map-card" onclick="openMap('kvartaly')">
+            <img src="/static/img/maps/STALZONE/kvartaly/preview.png" alt="Кварталы">
+            <div class="map-name">Кварталы</div>
+            <div class="map-editors" data-map-id="kvartaly"></div>
+        </div>
+        <div class="map-card" onclick="openMap('rosa')">
+            <img src="/static/img/maps/STALZONE/rosa/preview.png" alt="Роза Ветров">
+            <div class="map-name">Роза Ветров</div>
+            <div class="map-editors" data-map-id="rosa"></div>
+        </div>
+        <div class="map-card" onclick="openMap('bedrovka')">
+            <img src="/static/img/maps/STALZONE/bedrovka/preview.png" alt="Малая Бедровка">
+            <div class="map-name">Малая Бедровка</div>
+            <div class="map-editors" data-map-id="bedrovka"></div>
+        </div>
+        <div class="map-card" onclick="openMap('nizina')">
+            <img src="/static/img/maps/STALZONE/nizina/preview.png" alt="Низина">
+            <div class="map-name">Низина</div>
+            <div class="map-editors" data-map-id="nizina"></div>
+        </div>
+    </div>
+    <h3 class="category-title">Eternal Crusade Resurrection</h3>
+    <div class="map-grid">
+        <div class="map-card" onclick="openMap('/static/img/ECR_Rage.png')">
+            <img src="/static/img/ECR_Rage.png" alt="Ярость">
+            <div class="map-name">Ярость</div>
+            <div class="map-editors" data-map-id="/static/img/ECR_Rage.png"></div>
+        </div>
+        <div class="map-card" onclick="openMap('/static/img/ECR_Nexus.png')">
+            <img src="/static/img/ECR_Nexus.png" alt="Нексус">
+            <div class="map-name">Нексус</div>
+            <div class="map-editors" data-map-id="/static/img/ECR_Nexus.png"></div>
+        </div>
+        <div class="map-card" onclick="openMap('/static/img/ECR_Atonement.png')">
+            <img src="/static/img/ECR_Atonement.png" alt="Искупление">
+            <div class="map-name">Искупление</div>
+            <div class="map-editors" data-map-id="/static/img/ECR_Atonement.png"></div>
+        </div>
+    </div>
+</div>
+
+<div id="editorScreen" style="display:none;">
+    <button id="backToMapsBtn" onclick="backToChoose()">← К выбору карт</button>
+    <div class="map-container">
+        <canvas id="mapCanvas"></canvas>
+        <textarea id="textInputOnMap" placeholder="Текст..." rows="1"></textarea>
+    </div>
+
+    <!-- Панель онлайна и чата -->
+    <div id="collab-panel">
+        <div class="collab-header" id="chatDragHandle">
+            <span>👥 Онлайн: <span id="onlineCount">0</span></span>
+            <button class="collab-toggle" id="collabToggle" title="Свернуть">−</button>
+        </div>
+        <div class="collab-body">
+            <ul id="onlineUsers"></ul>
+            <div class="collab-header collab-header-secondary">💬 Чат</div>
+            <div id="chatMessages"></div>
+            <div class="chat-input-row">
+                <input type="text" id="chatInput" placeholder="Сообщение..." maxlength="200">
+                <button id="chatSend" title="Отправить">▶</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolsWrapper">
+        <div class="tools-panel">
+            <h3>🧰 Инструменты</h3>
+            <button data-tool="hand" onclick="setTool('hand')">✋ Перемещение</button>
+            <button data-tool="pen" class="selected" onclick="setTool('pen')">✏ Карандаш</button>
+            <button data-tool="line" onclick="setTool('line')">━ Линия</button>
+            <button data-tool="outlineLine" onclick="setTool('outlineLine')">═ Контурная линия</button>
+            <button data-tool="circle" onclick="setTool('circle')">◯ Круг</button>
+            <button data-tool="rectSelect" onclick="setTool('rectSelect')">▭ Квадрат</button>
+            <button data-tool="arrow" onclick="setTool('arrow')">➤ Стрелка</button>
+            <button data-tool="text" onclick="setTool('text')">🅰 Текст</button>
+            <button data-tool="attack" onclick="setTool('attack')">⚔ Атака</button>
+            <button data-tool="defense" onclick="setTool('defense')">🛡 Оборона</button>
+            <button data-tool="tent" onclick="setTool('tent')">🏕 Палатка</button>
+            <button data-tool="recon" onclick="setTool('recon')">📡 Ралик</button>
+            <button data-tool="eraser" onclick="setTool('eraser')">🧽 Тёрка</button>
+            <label>🎨 Цвет</label>
+            <input type="color" id="colorPicker" value="#ff1a1a">
+            <label>📏 Толщина</label>
+            <input type="range" id="widthPicker" min="1" max="12" value="3">
+            <button onclick="undoAction()">↩ Назад</button>
+            <button onclick="clearCanvas()">🗑 Очистить</button>
+            <button onclick="saveMap()">💾 Сохранить</button>
+            <button onclick="loadMap()">📂 Загрузить</button>
+            <button onclick="exportPNG()">🖼 PNG</button>
+            <button onclick="resetView()">🔍 Сбросить масштаб</button>
+            <input type="file" id="fileLoader" style="display:none;" onchange="handleFile(event)">
+        </div>
+    </div>
+    <button id="hideToolsBtn">&lt;</button>
+</div>
+
+<div id="cursorsLayer"></div>
+
+<script>
+    // ============================================================
+    // 1. КОНФИГУРАЦИЯ КАРТ
+    // ============================================================
+    const MAP_CONFIGS = {
+        'coniferous': {
+            type: 'tiles', name: 'Хвойный', category: 'STALZONE',
+            preview: '/static/img/maps/STALZONE/coniferous/preview.png',
+            tileSize: 256, cols: 3, rows: 2,
+            basePath: '/static/img/maps/STALZONE/coniferous/',
+            tilePattern: 'tile_{col}_{row}.png'
+        },
+        'kvartaly': {
+            type: 'tiles', name: 'Кварталы', category: 'STALZONE',
+            preview: '/static/img/maps/STALZONE/kvartaly/preview.png',
+            tileSize: 256, cols: 2, rows: 2,
+            basePath: '/static/img/maps/STALZONE/kvartaly/',
+            tilePattern: 'tile_{col}_{row}.png'
+        },
+        'rosa': {
+            type: 'tiles', name: 'Роза Ветров', category: 'STALZONE',
+            preview: '/static/img/maps/STALZONE/rosa/preview.png',
+            tileSize: 256, cols: 5, rows: 5,
+            basePath: '/static/img/maps/STALZONE/rosa/',
+            tilePattern: 'tile_{col}_{row}.png'
+        },
+        'bedrovka': {
+            type: 'tiles', name: 'Малая Бедровка', category: 'STALZONE',
+            preview: '/static/img/maps/STALZONE/bedrovka/preview.png',
+            tileSize: 256, cols: 3, rows: 3,
+            basePath: '/static/img/maps/STALZONE/bedrovka/',
+            tilePattern: 'tile_{col}_{row}.png'
+        },
+        'nizina': {
+            type: 'tiles', name: 'Низина', category: 'STALZONE',
+            preview: '/static/img/maps/STALZONE/nizina/preview.png',
+            tileSize: 256, cols: 4, rows: 4,
+            basePath: '/static/img/maps/STALZONE/nizina/',
+            tilePattern: 'tile_{col}_{row}.png'
+        }
+    };
+
+    // ============================================================
+    // 2. ПЕРЕМЕННЫЕ
+    // ============================================================
+    const chooseScreen = document.getElementById('mapChooseScreen');
+    const editorScreen = document.getElementById('editorScreen');
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    const textInput = document.getElementById('textInputOnMap');
+
+    let mapImg = new Image();
+    let camX = 0, camY = 0, scale = 1;
+    let tool = 'pen';
+    let color = '#ff1a1a';
+    let lineWidth = 3;
+    let drawing = false, startX = 0, startY = 0;
+    let lastEraserPos = null;
+    let actions = [], preview = null;
+    let isPanning = false, panStart = {x:0, y:0};
+    let needsRedraw = false;
+    let currentMapId = null;
+
+    let selectedTextIndex = -1;
+    let isDraggingText = false;
+    let isResizingText = false;
+    let dragTextOffsetX = 0, dragTextOffsetY = 0;
+    let resizeStartSize = 20, resizeStartDist = 0;
+
+    let isTextInputActive = false;
+    let pendingTextX = null, pendingTextY = null;
+
+    const colorPicker = document.getElementById('colorPicker');
+    const widthPicker = document.getElementById('widthPicker');
+    colorPicker.oninput = e => color = e.target.value;
+    widthPicker.oninput = e => lineWidth = +e.target.value;
+
+    const hideToolsBtn = document.getElementById('hideToolsBtn');
+    const toolsWrapper = document.getElementById('toolsWrapper');
+    if (hideToolsBtn && toolsWrapper) {
+        hideToolsBtn.onclick = () => {
+            toolsWrapper.classList.toggle('hidden');
+            hideToolsBtn.textContent = toolsWrapper.classList.contains('hidden') ? '>' : '<';
+        };
+    }
+
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    // ============================================================
+    // 3. ЗАГРУЗКА ТАЙЛОВ
+    // ============================================================
+    function loadTileMap(config) {
+        return new Promise((resolve) => {
+            const { tileSize, cols, rows, basePath, tilePattern } = config;
+            const totalWidth = cols * tileSize;
+            const totalHeight = rows * tileSize;
+            const totalTiles = cols * rows;
+
+            const offscreen = document.createElement('canvas');
+            offscreen.width = totalWidth;
+            offscreen.height = totalHeight;
+            const octx = offscreen.getContext('2d');
+            octx.fillStyle = '#1a1a2e';
+            octx.fillRect(0, 0, totalWidth, totalHeight);
+
+            let loaded = 0, errors = 0;
+            if (totalTiles === 0) { resolve(offscreen); return; }
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const img = new Image();
+                    const src = basePath + tilePattern.replace(/\{col\}/g, col).replace(/\{row\}/g, row);
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        try { octx.drawImage(img, col * tileSize, row * tileSize, tileSize, tileSize); }
+                        catch(e) { fallbackTile(octx, col, row, tileSize); errors++; }
+                        loaded++;
+                        if (loaded + errors >= totalTiles) resolve(offscreen);
+                    };
+                    img.onerror = () => {
+                        fallbackTile(octx, col, row, tileSize);
+                        errors++;
+                        loaded++;
+                        if (loaded + errors >= totalTiles) resolve(offscreen);
+                    };
+                    img.src = src;
+                }
+            }
+
+            function fallbackTile(ctx, col, row, size) {
+                ctx.fillStyle = '#2a2a4a';
+                ctx.fillRect(col * size, row * size, size, size);
+                ctx.strokeStyle = '#444';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(col * size, row * size, size, size);
+                ctx.fillStyle = '#666';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${col},${row}`, col * size + size/2, row * size + size/2);
+            }
+        });
+    }
+
+    // ============================================================
+    // 4. ОТКРЫТИЕ / ЗАКРЫТИЕ КАРТЫ
+    // ============================================================
+    function openMap(arg) {
+        stopEditorsPolling();
+
+        if (typeof arg === 'string' && arg.startsWith('/static')) {
+            chooseScreen.style.display = 'none';
+            editorScreen.style.display = 'block';
+            actions = []; preview = null; selectedTextIndex = -1;
+            camX = 0; camY = 0; scale = 1;
+            resizeCanvas();
+            loadingOverlay.style.display = 'flex';
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                mapImg = img;
+                loadingOverlay.style.display = 'none';
+                requestRedraw();
+                joinCurrentMap(arg);
+            };
+            img.onerror = () => { loadingOverlay.style.display = 'none'; alert('Не удалось загрузить карту: ' + arg); };
+            img.src = arg;
+            return;
+        }
+
+        const config = MAP_CONFIGS[arg];
+        if (!config) { console.error('Неизвестная карта:', arg); return; }
+
+        chooseScreen.style.display = 'none';
+        editorScreen.style.display = 'block';
+        actions = []; preview = null; selectedTextIndex = -1;
+        camX = 0; camY = 0; scale = 1;
+        resizeCanvas();
+
+        loadingOverlay.style.display = 'flex';
+
+        if (config.type === 'tiles') {
+            loadTileMap(config).then((offscreenCanvas) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    mapImg = img;
+                    loadingOverlay.style.display = 'none';
+                    requestRedraw();
+                    joinCurrentMap(arg);
+                };
+                img.onerror = () => { loadingOverlay.style.display = 'none'; alert('Ошибка при создании тайловой карты.'); };
+                img.src = offscreenCanvas.toDataURL('image/png');
+            }).catch((err) => {
+                loadingOverlay.style.display = 'none';
+                console.error(err);
+                alert('Ошибка загрузки тайлов: ' + err.message);
+            });
+        }
+    }
+
+    function backToChoose() {
+        if (socket && currentMapId) {
+            socket.emit("leave_map", { map_id: currentMapId });
+        }
+        currentMapId = null;
+
+        editorScreen.style.display = 'none';
+        chooseScreen.style.display = 'block';
+        mapImg = new Image();
+        actions = []; preview = null; selectedTextIndex = -1;
+        textInput.style.display = 'none';
+        isTextInputActive = false;
+
+        Object.keys(remoteCursors).forEach(removeCursor);
+        renderUsers({});
+        const box = document.getElementById("chatMessages");
+        if (box) box.innerHTML = "";
+
+        startEditorsPolling();
+    }
+
+    // ============================================================
+    // 5. ОТРИСОВКА
+    // ============================================================
+    function getOffsets() {
+        const w = canvas.width, h = canvas.height;
+        if (!mapImg || !mapImg.width || !mapImg.height) return {x:0, y:0, w:w, h:h};
+        const cr = w / h;
+        const mr = mapImg.width / mapImg.height;
+        let x = 0, y = 0, dw, dh;
+        if (mr > cr) { dw = w; dh = w / mr; y = (h - dh) / 2; }
+        else { dh = h; dw = h * mr; x = (w - dw) / 2; }
+        return { x, y, w: dw, h: dh };
+    }
+
+    function style(col, w) {
+        ctx.strokeStyle = col;
+        ctx.fillStyle = col;
+        ctx.lineWidth = w;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function drawDashedLine(a) {
+        ctx.save();
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth = a.width;
+        const dashLen = Math.max(4, a.width * 4);
+        ctx.setLineDash([dashLen, dashLen * 0.7]);
+        ctx.beginPath();
+        ctx.moveTo(a.startX, a.startY);
+        ctx.lineTo(a.endX, a.endY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+
+    function drawArrow(a) {
+        const headSize = Math.max(8, a.width * 4);
+        const angle = Math.atan2(a.endY - a.startY, a.endX - a.startX);
+        ctx.save();
+        ctx.strokeStyle = a.color;
+        ctx.fillStyle = a.color;
+        ctx.lineWidth = a.width;
+        ctx.lineCap = 'round';
+
+        ctx.beginPath();
+        ctx.moveTo(a.startX, a.startY);
+        const len = Math.hypot(a.endX - a.startX, a.endY - a.startY);
+        const clamp = Math.min(len - headSize * 1.2, len);
+        const ex = a.startX + (a.endX - a.startX) * (clamp / len);
+        const ey = a.startY + (a.endY - a.startY) * (clamp / len);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(a.endX, a.endY);
+        ctx.lineTo(a.endX - headSize * Math.cos(angle - 0.45), a.endY - headSize * Math.sin(angle - 0.45));
+        ctx.lineTo(a.endX - headSize * Math.cos(angle + 0.45), a.endY - headSize * Math.sin(angle + 0.45));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawAction(a, index = -1) {
+        const col = a.color || '#ff1a1a';
+        const w = a.width || 3;
+
+        switch (a.tool) {
+            case 'line':
+                style(col, w);
+                ctx.beginPath();
+                ctx.moveTo(a.startX, a.startY);
+                ctx.lineTo(a.endX, a.endY);
+                ctx.stroke();
+                break;
+            case 'outlineLine':
+                drawDashedLine(a);
+                break;
+            case 'arrow':
+                drawArrow(a);
+                break;
+            case 'circle':
+                style(col, w);
+                ctx.beginPath();
+                ctx.arc(a.cx, a.cy, Math.abs(a.radius), 0, 2 * Math.PI);
+                ctx.stroke();
+                break;
+            case 'rectSelect':
+                style(col, w);
+                ctx.strokeRect(a.x1, a.y1, a.x2 - a.x1, a.y2 - a.y1);
+                break;
+            case 'pen':
+                if (a.path && a.path.length > 1) {
+                    style(col, w);
+                    ctx.beginPath();
+                    ctx.moveTo(a.path[0].x, a.path[0].y);
+                    for (let i = 1; i < a.path.length; i++) {
+                        ctx.lineTo(a.path[i].x, a.path[i].y);
+                    }
+                    ctx.stroke();
+                }
+                break;
+            case 'text': {
+                ctx.save();
+                const fontSize = a.size || 20;
+                ctx.font = `600 ${fontSize}px 'Segoe UI', Roboto, sans-serif`;
+                const lines = (a.text || '').split('\n');
+                const lineHeight = fontSize * 1.25;
+                let maxLineWidth = 0;
+                lines.forEach(line => {
+                    const metrics = ctx.measureText(line);
+                    if (metrics.width > maxLineWidth) maxLineWidth = metrics.width;
+                });
+                const padding = 6;
+                const rectWidth = maxLineWidth + padding * 2;
+                const rectHeight = (lines.length * lineHeight) + padding * 2;
+                ctx.fillStyle = 'rgba(13, 13, 26, 0.85)';
+                ctx.strokeStyle = col;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(a.x, a.y, rectWidth, rectHeight, 4);
+                else ctx.rect(a.x, a.y, rectWidth, rectHeight);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = col;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, a.x + padding, a.y + padding + (i * lineHeight));
+                });
+                a.computedWidth = rectWidth;
+                a.computedHeight = rectHeight;
+                if (index === selectedTextIndex && index !== -1) {
+                    ctx.strokeStyle = '#00ffcc';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(a.x - 2, a.y - 2, rectWidth + 4, rectHeight + 4);
+                    ctx.setLineDash([]);
+                    const handleSize = 8;
+                    ctx.fillStyle = '#00ffcc';
+                    ctx.fillRect(a.x + rectWidth - handleSize/2, a.y + rectHeight - handleSize/2, handleSize, handleSize);
+                }
+                ctx.restore();
+                break;
+            }
+            case 'attack':
+            case 'defense':
+            case 'tent':
+            case 'recon': {
+                ctx.save();
+                let icon = '⚔';
+                if (a.tool === 'defense') icon = '🛡';
+                if (a.tool === 'tent') icon = '🏕';
+                if (a.tool === 'recon') icon = '📡';
+                const sz = a.size || 28;
+                ctx.font = `${sz}px Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = col;
+                ctx.fillText(icon, a.x, a.y);
+                ctx.restore();
+                break;
+            }
+        }
+    }
+
+    function redraw() {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!mapImg || !mapImg.width || !mapImg.height) {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#444';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Загрузка карты...', canvas.width/2, canvas.height/2);
+            return;
+        }
+
+        ctx.setTransform(scale, 0, 0, scale, -camX * scale, -camY * scale);
+        const o = getOffsets();
+        ctx.drawImage(mapImg, o.x, o.y, o.w, o.h);
+        for (let i = 0; i < actions.length; i++) drawAction(actions[i], i);
+        if (preview) drawAction(preview);
+
+        if (tool === 'eraser' && preview && preview.type === 'eraserCursor') {
+            ctx.save();
+            ctx.strokeStyle = '#e94560';
+            ctx.fillStyle = 'rgba(233, 69, 96, 0.2)';
+            ctx.lineWidth = 1.5 / scale;
+            ctx.beginPath();
+            ctx.arc(preview.x, preview.y, preview.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    function requestRedraw() {
+        if (!needsRedraw) {
+            needsRedraw = true;
+            requestAnimationFrame(() => { redraw(); needsRedraw = false; });
+        }
+    }
+
+    function resizeCanvas() {
+        const container = document.querySelector('.map-container');
+        if (!container) return;
+        canvas.width = container.clientWidth || window.innerWidth;
+        canvas.height = container.clientHeight || window.innerHeight - 60;
+        requestRedraw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // ============================================================
+    // 6. ЛОГИКА СТИРАНИЯ И ИНСТРУМЕНТЫ
+    // ============================================================
+    function distToSegment(p, a, b) {
+        const l2 = Math.hypot(a.x - b.x, a.y - b.y) ** 2;
+        if (l2 === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+        let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
+    }
+
+    function isIntersectedByEraser(p1, p2, r, action) {
+        const checkPoint = (pt) => {
+            if (action.tool === 'pen' && action.path) {
+                const iw = (action.width || 3) / 2;
+                return action.path.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < (r + iw));
+            }
+            if (['attack','defense','tent','recon'].includes(action.tool)) {
+                const ir = (action.size || 28) / 2;
+                return Math.hypot(action.x - pt.x, action.y - pt.y) < (r + ir);
+            }
+            if (action.tool === 'text') {
+                const w = action.computedWidth || 100;
+                const h = action.computedHeight || 30;
+                const cx = Math.max(action.x, Math.min(pt.x, action.x + w));
+                const cy = Math.max(action.y, Math.min(pt.y, action.y + h));
+                return Math.hypot(pt.x - cx, pt.y - cy) < r;
+            }
+            if (['line','outlineLine','arrow'].includes(action.tool)) {
+                const iw = (action.width || 3) / 2;
+                return distToSegment(pt, {x:action.startX, y:action.startY}, {x:action.endX, y:action.endY}) < (r + iw);
+            }
+            if (action.tool === 'circle') {
+                const d = Math.hypot(pt.x - action.cx, pt.y - action.cy);
+                return Math.abs(d - action.radius) < r;
+            }
+            if (action.tool === 'rectSelect') {
+                const minX = Math.min(action.x1, action.x2), maxX = Math.max(action.x1, action.x2);
+                const minY = Math.min(action.y1, action.y2), maxY = Math.max(action.y1, action.y2);
+                const cx = Math.max(minX, Math.min(pt.x, maxX));
+                const cy = Math.max(minY, Math.min(pt.y, maxY));
+                return Math.hypot(pt.x - cx, pt.y - cy) < r;
+            }
+            return false;
+        };
+        if (checkPoint(p2) || checkPoint(p1)) return true;
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const steps = Math.ceil(dist / (r / 2));
+        for (let i = 1; i < steps; i++) {
+            const ip = {
+                x: p1.x + (p2.x - p1.x) * (i / steps),
+                y: p1.y + (p2.y - p1.y) * (i / steps)
+            };
+            if (checkPoint(ip)) return true;
+        }
+        return false;
+    }
+
+    function setTool(t) {
+        tool = t;
+        preview = null;
+        drawing = false;
+        lastEraserPos = null;
+        selectedTextIndex = -1;
+        if (isTextInputActive) cancelTextInput();
+        document.querySelectorAll('.tools-panel button[data-tool]').forEach(b => b.classList.remove('selected'));
+        const btn = document.querySelector(`.tools-panel button[data-tool="${t}"]`);
+        if (btn) btn.classList.add('selected');
+        canvas.style.cursor = t === 'hand' ? 'grab' : 'crosshair';
+        requestRedraw();
+    }
+
+    function screenToLogical(sx, sy) {
+        const r = canvas.getBoundingClientRect();
+        return [(sx - r.left) / scale + camX, (sy - r.top) / scale + camY];
+    }
+    function logicalToScreen(lx, ly) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (lx - camX) * scale + r.left, y: (ly - camY) * scale + r.top };
+    }
+
+    function hitTestText(px, py) {
+        for (let i = actions.length - 1; i >= 0; i--) {
+            const a = actions[i];
+            if (a.tool === 'text') {
+                const w = a.computedWidth || 100;
+                const h = a.computedHeight || 30;
+                if (px >= a.x && px <= a.x + w && py >= a.y && py <= a.y + h) return i;
+            }
+        }
+        return -1;
+    }
+
+    function hitTestTextResizeHandle(px, py, textAction) {
+        if (!textAction || textAction.tool !== 'text') return false;
+        const w = textAction.computedWidth || 100;
+        const h = textAction.computedHeight || 30;
+        const hx = textAction.x + w;
+        const hy = textAction.y + h;
+        const hr = 12 / scale;
+        return Math.hypot(px - hx, py - hy) <= hr;
+    }
+
+    function showTextInput(logicalX, logicalY, initialText = '', editIndex = -1) {
+        const container = document.querySelector('.map-container');
+        if (!container) return;
+
+        const sx = (logicalX - camX) * scale;
+        const sy = (logicalY - camY) * scale;
+
+        const fontSize = Math.max(14, (lineWidth * 6 + 12) * scale);
+
+        textInput.style.color = color;
+        textInput.style.borderColor = color;
+        textInput.style.caretColor = color;
+        textInput.style.fontSize = fontSize + 'px';
+        textInput.style.left = sx + 'px';
+        textInput.style.top  = sy + 'px';
+        textInput.style.display = 'block';
+        textInput.value = initialText;
+        textInput.style.height = 'auto';
+
+        autoResizeTextInput();
+
+        setTimeout(() => {
+            textInput.focus();
+            try { textInput.setSelectionRange(textInput.value.length, textInput.value.length); } catch(_) {}
+        }, 10);
+
+        isTextInputActive = true;
+        pendingTextX = logicalX;
+        pendingTextY = logicalY;
+        textInput.dataset.editIndex = editIndex;
+    }
+
+    function autoResizeTextInput() {
+        const fontSize = parseFloat(textInput.style.fontSize) || 16;
+        ctx.save();
+        ctx.font = `600 ${fontSize}px 'Segoe UI', Roboto, sans-serif`;
+        const lines = (textInput.value || "Текст").split('\n');
+        let maxW = 0;
+        lines.forEach(l => {
+            const m = ctx.measureText(l || " ");
+            if (m.width > maxW) maxW = m.width;
+        });
+        ctx.restore();
+
+        const padding = 20;
+        const minW = 60;
+        textInput.style.width = Math.max(minW, maxW + padding) + 'px';
+
+        textInput.style.height = 'auto';
+        textInput.style.height = textInput.scrollHeight + 'px';
+    }
+
+    function cancelTextInput() {
+        textInput.style.display = 'none';
+        isTextInputActive = false;
+        pendingTextX = null; pendingTextY = null;
+        textInput.value = '';
+        requestRedraw();
+    }
+
+    function commitTextInput() {
+        const txt = textInput.value.trim();
+        const editIdx = parseInt(textInput.dataset.editIndex ?? -1);
+
+        if (txt && pendingTextX !== null && pendingTextY !== null) {
+            if (editIdx >= 0 && actions[editIdx]) {
+                actions[editIdx].text = txt;
+                actions[editIdx].x = pendingTextX;
+                actions[editIdx].y = pendingTextY;
+                if (socket && currentMapId) {
+                    socket.emit("remove_action", { map_id: currentMapId, index: editIdx });
+                    socket.emit("add_action",    { map_id: currentMapId, action: actions[editIdx] });
+                }
+            } else {
+                const size = lineWidth * 6 + 12;
+                const newAction = { tool: 'text', color, x: pendingTextX, y: pendingTextY, text: txt, size };
+                actions.push(newAction);
+                selectedTextIndex = actions.length - 1;
+                if (socket && currentMapId) {
+                    socket.emit("add_action", { map_id: currentMapId, action: newAction });
+                }
+            }
+        } else if (editIdx >= 0) {
+            actions.splice(editIdx, 1);
+            selectedTextIndex = -1;
+            if (socket && currentMapId) {
+                socket.emit("remove_action", { map_id: currentMapId, index: editIdx });
+            }
+        }
+
+        textInput.style.display = 'none';
+        isTextInputActive = false;
+        pendingTextX = null; pendingTextY = null;
+        textInput.value = '';
+        requestRedraw();
+    }
+
+    textInput.addEventListener('input', autoResizeTextInput);
+    textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitTextInput(); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancelTextInput(); }
+    });
+
+    function undoAction() {
+        if (socket && currentMapId) {
+            socket.emit("undo_action", { map_id: currentMapId });
+        } else {
+            actions.pop();
+            requestRedraw();
+        }
+        selectedTextIndex = -1;
+    }
+
+    function clearCanvas() {
+        if (!confirm('Очистить весь холст?')) return;
+        if (socket && currentMapId) {
+            socket.emit("clear_map", { map_id: currentMapId });
+        } else {
+            actions = [];
+            selectedTextIndex = -1;
+            requestRedraw();
+        }
+    }
+
+    function resetView() {
+        camX = 0; camY = 0; scale = 1;
+        requestRedraw();
+    }
+
+    function saveMap() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(actions));
+        const a = document.createElement('a');
+        a.setAttribute("href", dataStr);
+        a.setAttribute("download", `map_plan_${currentMapId || 'custom'}.json`);
+        a.click();
+    }
+
+    function loadMap() {
+        document.getElementById('fileLoader').click();
+    }
+
+    function handleFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const loaded = JSON.parse(e.target.result);
+                actions = loaded;
+                selectedTextIndex = -1;
+                requestRedraw();
+                if (socket && currentMapId) {
+                    socket.emit("clear_map", { map_id: currentMapId });
+                    loaded.forEach(a => socket.emit("add_action", { map_id: currentMapId, action: a }));
+                }
+            } catch (err) {
+                alert('Ошибка чтения файла!');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = "";
+    }
+
+    function exportPNG() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+        const link = document.createElement('a');
+        link.download = `map_${currentMapId || 'plan'}.png`;
+        link.href = tempCanvas.toDataURL('image/png');
+        link.click();
+    }
+
+    // ============================================================
+    // 7. СОБЫТИЯ МЫШИ
+    // ============================================================
+    canvas.addEventListener('dblclick', e => {
+        const [x, y] = screenToLogical(e.clientX, e.clientY);
+        const hitIdx = hitTestText(x, y);
+        if (hitIdx >= 0) showTextInput(actions[hitIdx].x, actions[hitIdx].y, actions[hitIdx].text, hitIdx);
+    });
+
+    canvas.addEventListener('mousedown', e => {
+        const [x, y] = screenToLogical(e.clientX, e.clientY);
+        const btn = e.button;
+
+        if (isTextInputActive) { commitTextInput(); return; }
+
+        if (btn === 2 || tool === 'hand') {
+            isPanning = true;
+            panStart = {x: e.clientX, y: e.clientY};
+            canvas.style.cursor = 'grabbing';
+            return;
+        }
+
+        if (selectedTextIndex >= 0 && actions[selectedTextIndex]) {
+            const selText = actions[selectedTextIndex];
+            if (hitTestTextResizeHandle(x, y, selText)) {
+                isResizingText = true;
+                resizeStartSize = selText.size || 20;
+                resizeStartDist = Math.hypot(x - selText.x, y - selText.y);
+                return;
+            }
+        }
+
+        const hitIdx = hitTestText(x, y);
+        if (tool === 'text') {
+            if (hitIdx >= 0) {
+                selectedTextIndex = hitIdx;
+                isDraggingText = true;
+                dragTextOffsetX = x - actions[hitIdx].x;
+                dragTextOffsetY = y - actions[hitIdx].y;
+                requestRedraw();
+                return;
+            } else {
+                selectedTextIndex = -1;
+                showTextInput(x, y);
+                return;
+            }
+        }
+
+        drawing = true;
+        startX = x;
+        startY = y;
+
+        if (tool === 'eraser') {
+            lastEraserPos = { x, y };
+        } else if (tool === 'pen') {
+            preview = { tool: 'pen', color, width: lineWidth, path: [{x, y}] };
+        } else if (['attack','defense','tent','recon'].includes(tool)) {
+            const newAction = { tool, color, x, y, size: lineWidth * 6 + 12 };
+            actions.push(newAction);
+            drawing = false;
+            requestRedraw();
+            if (socket && currentMapId) socket.emit("add_action", { map_id: currentMapId, action: newAction });
+        }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        const [x, y] = screenToLogical(e.clientX, e.clientY);
+        sendCursorThrottled(x, y);
+
+        if (isPanning) {
+            const dx = (e.clientX - panStart.x) / scale;
+            const dy = (e.clientY - panStart.y) / scale;
+            camX -= dx; camY -= dy;
+            panStart = {x: e.clientX, y: e.clientY};
+            requestRedraw();
+            return;
+        }
+
+        if (isResizingText && selectedTextIndex >= 0) {
+            const selText = actions[selectedTextIndex];
+            const cur = Math.hypot(x - selText.x, y - selText.y);
+            if (resizeStartDist > 0) {
+                const ratio = cur / resizeStartDist;
+                selText.size = Math.max(10, Math.min(120, Math.round(resizeStartSize * ratio)));
+                requestRedraw();
+            }
+            return;
+        }
+
+        if (isDraggingText && selectedTextIndex >= 0) {
+            actions[selectedTextIndex].x = x - dragTextOffsetX;
+            actions[selectedTextIndex].y = y - dragTextOffsetY;
+            requestRedraw();
+            return;
+        }
+
+        switch (tool) {
+            case 'eraser': {
+                const r = Math.max(12, lineWidth * 6);
+                preview = { type: 'eraserCursor', x, y, r };
+
+                if (drawing) {
+                    const p1 = lastEraserPos || {x,y};
+                    const p2 = {x,y};
+                    const removedIndices = [];
+                    actions.forEach((a, idx) => { if (isIntersectedByEraser(p1, p2, r, a)) removedIndices.push(idx); });
+                    for (let i = removedIndices.length - 1; i >= 0; i--) actions.splice(removedIndices[i], 1);
+                    if (socket && currentMapId && removedIndices.length) {
+                        removedIndices.sort((a,b) => b - a).forEach(idx => {
+                            socket.emit("remove_action", { map_id: currentMapId, index: idx });
+                        });
+                    }
+                    lastEraserPos = p2;
+                }
+                requestRedraw();
+                break;
+            }
+            case 'pen':
+                if (drawing) { preview.path.push({x, y}); requestRedraw(); }
+                break;
+            case 'line':
+            case 'outlineLine':
+            case 'arrow':
+                if (drawing) {
+                    preview = { tool, color, width: lineWidth, startX, startY, endX: x, endY: y };
+                    requestRedraw();
+                }
+                break;
+            case 'circle':
+                if (drawing) {
+                    const radius = Math.hypot(x - startX, y - startY);
+                    preview = { tool: 'circle', color, width: lineWidth, cx: startX, cy: startY, radius };
+                    requestRedraw();
+                }
+                break;
+            case 'rectSelect':
+                if (drawing) {
+                    preview = { tool: 'rectSelect', color, width: lineWidth, x1: startX, y1: startY, x2: x, y2: y };
+                    requestRedraw();
+                }
+                break;
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            canvas.style.cursor = tool === 'hand' ? 'grab' : 'crosshair';
+        }
+        if (isDraggingText || isResizingText) {
+            isDraggingText = false; isResizingText = false;
+            return;
+        }
+        if (drawing) {
+            drawing = false;
+            lastEraserPos = null;
+            if (preview && preview.type !== 'eraserCursor') {
+                actions.push(preview);
+                if (socket && currentMapId) socket.emit("add_action", { map_id: currentMapId, action: preview });
+                preview = null;
+            }
+            requestRedraw();
+        }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        isPanning = false;
+        drawing = false;
+        isDraggingText = false;
+        isResizingText = false;
+        lastEraserPos = null;
+        if (tool === 'eraser') { preview = null; requestRedraw(); }
+    });
+
+    canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+        const [lx, ly] = screenToLogical(e.clientX, e.clientY);
+        scale *= zoomFactor;
+        scale = Math.max(0.2, Math.min(10, scale));
+        camX = lx - (e.clientX - canvas.getBoundingClientRect().left) / scale;
+        camY = ly - (e.clientY - canvas.getBoundingClientRect().top) / scale;
+        requestRedraw();
+    }, { passive: false });
+
+    // ============================================================
+    // 8. COLLAB (Синхронизация)
+    // ============================================================
+    let socket = null;
+    const remoteCursors = {};
+    let lastCursorSent = 0;
+
+    function initCollab() {
+        if (typeof io === "undefined") return;
+        socket = io();
+
+        socket.on("connect", () => {
+            if (currentMapId) socket.emit("join_map", { map_id: currentMapId });
+        });
+
+        socket.on("map_state", (data) => {
+            actions = data.actions || [];
+            requestRedraw();
+            renderUsers(data.users || {});
+            for (const sid in data.users) {
+                const u = data.users[sid];
+                ensureCursor(sid, u);
+                if (u.cursor) moveCursor(sid, u.cursor.x, u.cursor.y);
+            }
+            const box = document.getElementById("chatMessages");
+            if (box) {
+                box.innerHTML = "";
+                (data.chat || []).forEach(m => appendChat(m.name, m.text));
+                appendChat("", "Вы вошли в комнату");
+            }
+        });
+
+        socket.on("user_joined", d => { ensureCursor(d.sid, d.user); appendChat("", `${d.user.name} присоединился`); });
+        socket.on("user_left",   d => removeCursor(d.sid));
+        socket.on("users_update", d => renderUsers(d.users || {}));
+        socket.on("action_added", d => { actions.push(d.action); requestRedraw(); });
+        socket.on("action_removed", d => {
+            if (d.index >= 0 && d.index < actions.length) { actions.splice(d.index, 1); requestRedraw(); }
+        });
+        socket.on("map_cleared", () => {
+            actions = [];
+            selectedTextIndex = -1;
+            requestRedraw();
+        });
+        socket.on("cursor_moved", d => moveCursor(d.sid, d.x, d.y));
+        socket.on("chat_message", d => appendChat(d.name, d.text));
+        
+        // Подписка на обновление редакторов
+        socket.on("map_editors_update", data => {
+            applyEditorsData(data);
+        });
+
+        socket.on("error_msg", d => {
+            if (d.error === "not_authorized") {
+                alert("Требуется вход через Discord.");
+                window.location.href = "/login";
+            } else if (d.error === "clear_not_allowed") {
+                alert("Очищать карту может только администратор.");
+            }
+        });
+    }
+
+    function joinCurrentMap(mapId) {
+        if (!socket) return;
+        if (currentMapId && currentMapId !== mapId) socket.emit("leave_map", { map_id: currentMapId });
+        currentMapId = mapId;
+        socket.emit("join_map", { map_id: mapId });
+    }
+
+    function sendCursorThrottled(lx, ly) {
+        if (!socket || !currentMapId) return;
+        const now = Date.now();
+        if (now - lastCursorSent < 60) return;
+        lastCursorSent = now;
+        socket.emit("cursor_move", { map_id: currentMapId, x: lx, y: ly });
+    }
+
+    function renderUsers(users) {
+        const ul = document.getElementById("onlineUsers");
+        const cnt = document.getElementById("onlineCount");
+        if (!ul) return;
+        ul.innerHTML = "";
+        let n = 0;
+        for (const sid in users) {
+            n++;
+            const u = users[sid];
+            const li = document.createElement("li");
+            li.innerHTML = `<span class="dot" style="background:${u.color};box-shadow:0 0 6px ${u.color};"></span> ${escapeHtml(u.name)}`;
+            ul.appendChild(li);
+        }
+        if (cnt) cnt.textContent = n;
+    }
+
+    function ensureCursor(sid, user) {
+        if (!sid || remoteCursors[sid]) return;
+        const el = document.createElement("div");
+        el.className = "remote-cursor";
+        el.style.background = user.color;
+        el.style.color = user.color;
+        el.setAttribute("data-name", user.name || "");
+        document.getElementById("cursorsLayer").appendChild(el);
+        remoteCursors[sid] = el;
+    }
+
+    function moveCursor(sid, lx, ly) {
+        const el = remoteCursors[sid];
+        if (!el) return;
+        const s = logicalToScreen(lx, ly);
+        el.style.left = s.x + "px";
+        el.style.top  = s.y + "px";
+        el.style.display = "block";
+    }
+
+    function removeCursor(sid) {
+        if (remoteCursors[sid]) { remoteCursors[sid].remove(); delete remoteCursors[sid]; }
+    }
+
+    function appendChat(name, text) {
+        const box = document.getElementById("chatMessages");
+        if (!box) return;
+        const div = document.createElement("div");
+        if (name) {
+            div.className = "msg";
+            div.innerHTML = `<b>${escapeHtml(name)}:</b> ${escapeHtml(text)}`;
+        } else {
+            div.className = "msg sys";
+            div.textContent = text;
+        }
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function sendChat() {
+        const inp = document.getElementById("chatInput");
+        if (!inp || !socket) return;
+        const text = inp.value.trim();
+        if (!text) return;
+        socket.emit("chat_message", { map_id: currentMapId, text });
+        inp.value = "";
+    }
+
+    document.getElementById("chatSend")?.addEventListener("click", sendChat);
+    document.getElementById("chatInput")?.addEventListener("keydown", e => {
+        if (e.key === "Enter") sendChat();
+    });
+
+    const collabPanel = document.getElementById("collab-panel");
+    const collabToggle = document.getElementById("collabToggle");
+    if (collabToggle && collabPanel) {
+        collabToggle.addEventListener("click", () => {
+            collabPanel.classList.toggle("collapsed");
+            collabToggle.textContent = collabPanel.classList.contains("collapsed") ? "+" : "−";
+        });
+    }
+
+    initCollab();
+
+    // ============================================================
+    // 8b. РЕДАКТОРЫ НА КАРТОЧКАХ (аватарки)
+    // ============================================================
+    function renderMapEditors(mapId, users) {
+        const box = document.querySelector(`.map-editors[data-map-id="${CSS.escape(mapId)}"]`);
+        if (!box) return;
+
+        if (!users || users.length === 0) {
+            box.innerHTML = '';
+            box.classList.remove('has-users');
+            return;
+        }
+
+        box.classList.add('has-users');
+
+        const chips = users.slice(0, 5).map(u => {
+            const avatar = u.avatar
+                ? `<img src="${escapeHtml(u.avatar)}" alt="" onerror="this.style.display='none';this.parentNode.classList.add('no-img')">`
+                : `<span class="user-initial">${escapeHtml((u.name || '?')[0].toUpperCase())}</span>`;
+            return `<div class="map-editor-chip" title="${escapeHtml(u.name)}" style="border-color:${u.color || '#e60000'}">${avatar}<span class="fallback-initial">${escapeHtml((u.name || '?')[0].toUpperCase())}</span></div>`;
+        }).join('');
+
+        const more = users.length > 5
+            ? `<div class="map-editor-more" title="Ещё ${users.length - 5}">+${users.length - 5}</div>`
+            : '';
+
+        box.innerHTML = chips + more;
+    }
+
+    function applyEditorsData(data) {
+        document.querySelectorAll('.map-editors[data-map-id]').forEach(el => {
+            const id = el.dataset.mapId;
+            renderMapEditors(id, (data && data[id]) || []);
+        });
+    }
+
+    async function refreshMapEditors() {
+        if (chooseScreen.style.display === 'none') return;
+        try {
+            const res = await fetch('/api/map-editors', { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            applyEditorsData(data);
+        } catch (_) { /* тихо */ }
+    }
+
+    let editorsTimer = null;
+    function startEditorsPolling() {
+        refreshMapEditors();
+        if (editorsTimer) clearInterval(editorsTimer);
+        editorsTimer = setInterval(refreshMapEditors, 5000);
+    }
+    function stopEditorsPolling() {
+        if (editorsTimer) { clearInterval(editorsTimer); editorsTimer = null; }
+    }
+
+    // Стартуем polling, пока пользователь на экране выбора
+    if (chooseScreen.style.display !== 'none') {
+        startEditorsPolling();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        if (chooseScreen.style.display !== 'none') startEditorsPolling();
+    });
+
+    // ============================================================
+    // 9. МЕНЮ ПОЛЬЗОВАТЕЛЯ
+    // ============================================================
+    (function initUserMenu() {
+        const menu     = document.getElementById("userMenu");
+        const toggle   = document.getElementById("userMenuToggle");
+        const dropdown = document.getElementById("userDropdown");
+        if (!menu || !toggle || !dropdown) return;
+
+        dropdown.removeAttribute("hidden");
+        const isOpen = () => menu.classList.contains("open");
+
+        toggle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            menu.classList.toggle("open");
+            toggle.setAttribute("aria-expanded", menu.classList.contains("open"));
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!menu.contains(e.target)) menu.classList.remove("open");
+        });
+    })();
+
+    // ============================================================
+    // 10. ПЕРЕТАСКИВАНИЕ ПАНЕЛИ ЧАТА
+    // ============================================================
+    (function initDraggableChat() {
+        const panel = document.getElementById("collab-panel");
+        if (!panel) return;
+
+        const header = panel.querySelector(".collab-header");
+        
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        header.addEventListener("mousedown", (e) => {
+            if (e.target.closest(".collab-toggle")) return;
+
+            isDragging = true;
+            
+            const rect = panel.getBoundingClientRect();
+            
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.top = rect.top + 'px';
+            panel.style.left = rect.left + 'px';
+
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            
+            header.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            panel.style.left = (initialLeft + dx) + 'px';
+            panel.style.top = (initialTop + dy) + 'px';
+        });
+
+        document.addEventListener("mouseup", () => {
+            if (isDragging) {
+                isDragging = false;
+                header.style.cursor = 'grab';
+                document.body.style.userSelect = '';
+            }
+        });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Дашборд — Legion Of The Damned</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/discord-widget.css') }}">
+
+    <style>
+        /* ==================== СТИЛИ ДЛЯ ДАШБОРДА ==================== */
+        .dashboard-layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .dashboard-sidebar {
+            width: 280px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            position: sticky;
+            top: 100px;
+        }
+
+        .dashboard-sidebar h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #b91c1c;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .dashboard-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dashboard-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: #ccc;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .dashboard-menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .dashboard-menu-item.active {
+            background: rgba(185, 28, 28, 0.15);
+            color: #b91c1c;
+            border-left: 3px solid #b91c1c;
+        }
+
+        .dashboard-content {
+            flex: 1;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .dashboard-tab {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dashboard-tab.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-tab h2 {
+            margin-top: 0;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* ==================== ФОРМЫ ==================== */
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #b91c1c;
+        }
+
+        .form-input.error, .form-textarea.error, .form-select.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+        }
+
+        .form-input.valid { border-color: #22c55e; }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-hint {
+            display: block;
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+
+        .var-tag {
+            color: #b91c1c;
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .form-error {
+            display: none;
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+
+        .form-group.has-error .form-error { display: block; }
+
+        /* ==================== КНОПКИ ==================== */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: #b91c1c; color: #fff; }
+        .btn-primary:hover { background: #dc2626; }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #444;
+            color: #ccc;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: transparent;
+            border: 1px solid #7f1d1d;
+            color: #ef4444;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ==================== ПРЕДПРОСМОТР ==================== */
+        .preview-container {
+            margin-top: 40px;
+            border-top: 1px solid #333;
+            padding-top: 25px;
+        }
+
+        .preview-title {
+            color: #ccc;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .discord-preview-box {
+            background: #313338;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 650px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .dc-message { display: flex; gap: 15px; }
+
+        .dc-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #b91c1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+            font-size: 1.1rem;
+            font-family: "UnifrakturCook", cursive;
+        }
+
+        .dc-body { flex: 1; min-width: 0; }
+
+        .dc-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .dc-username { color: #fff; font-weight: 500; font-size: 1rem; }
+
+        .dc-bot-tag {
+            background: #5865F2;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .dc-timestamp { color: #949BA4; font-size: 0.8rem; }
+
+        .dc-text-content {
+            color: #DBDEE1;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .dc-embed {
+            border-left: 4px solid #b91c1c;
+            background: #2B2D31;
+            border-radius: 4px;
+            padding: 14px 16px;
+            margin-top: 8px;
+        }
+
+        .dc-embed-title {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .dc-embed-desc {
+            color: #DBDEE1;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            word-wrap: break-word;
+        }
+
+        .dc-embed-image {
+            max-width: 100%;
+            border-radius: 4px;
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* ==================== ТАБЛИЦА СОСТАВА ==================== */
+        .roster-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .roster-toolbar .form-input {
+            max-width: 300px;
+            margin-left: auto;
+        }
+
+        .roster-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .roster-table thead tr {
+            background: #111;
+            color: #b91c1c;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .roster-table th { padding: 12px; text-align: left; }
+
+        .roster-table td {
+            padding: 12px;
+            border-top: 1px solid #333;
+            color: #ccc;
+        }
+
+        .roster-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .roster-empty {
+            text-align: center;
+            color: #666;
+            padding: 30px !important;
+        }
+
+        /* ==================== КАРТОЧКИ РОЛЕЙ ==================== */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
+        }
+
+        .role-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+        .role-card:hover { border-color: #555; }
+
+        .role-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .role-card-name {
+            color: #fff;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .role-badge {
+            font-size: 0.7rem;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .role-badge-squad { background: #b91c1c; }
+        .role-badge-rank  { background: #ca8a04; }
+        .role-badge-special { background: #7c3aed; }
+
+        .role-card-id {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .role-empty {
+            color: #666;
+            padding: 30px;
+            text-align: center;
+            border: 1px dashed #333;
+            border-radius: 8px;
+            grid-column: 1 / -1;
+        }
+
+        /* ==================== ВЕТКИ ЗАЯВОК ==================== */
+        .branch-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .branch-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .branch-card-title {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .branch-card-title span {
+            color: #b91c1c;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .branches-empty {
+            color: #666;
+            padding: 40px;
+            text-align: center;
+            border: 1px dashed #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* ==================== «ВЫБРОС»: СЕРВЕРЫ ==================== */
+        .server-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .server-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .server-card-name {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .server-status {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .server-status.enabled  { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .server-status.disabled { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
+
+        .server-roles-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .server-role-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 8px 10px;
+            flex-wrap: wrap;
+        }
+
+        .server-role-row .form-input,
+        .server-role-row .form-select {
+            padding: 6px 8px;
+            font-size: 0.85rem;
+        }
+
+        .server-role-row .server-role-name { flex: 1; min-width: 130px; }
+        .server-role-row .server-role-id { flex: 1; min-width: 150px; }
+        .server-role-row .server-role-type { max-width: 120px; }
+
+        /* ==================== МОНИТОРИНГ БОТА ==================== */
+        .monitoring-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .monitoring-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+        }
+
+        .monitoring-status.online {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .monitoring-status.offline {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .monitoring-status.degraded {
+            background: rgba(234, 179, 8, 0.12);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 0 0 currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 currentColor; }
+            70%  { box-shadow: 0 0 0 8px rgba(0,0,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+        }
+
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 18px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: #444;
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-value.small { font-size: 1.1rem; }
+        .stat-value.ok { color: #22c55e; }
+        .stat-value.warn { color: #eab308; }
+        .stat-value.bad { color: #ef4444; }
+
+        .stat-sub {
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .stat-trend {
+            font-size: 0.75rem;
+            color: #22c55e;
+            margin-top: 4px;
+        }
+        .stat-trend.down { color: #ef4444; }
+
+        .monitoring-section-title {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 30px 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Мини-график активности */
+        .activity-chart {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 140px;
+            margin-bottom: 10px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #b91c1c, #dc2626);
+            border-radius: 3px 3px 0 0;
+            min-height: 3px;
+            position: relative;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+
+        .chart-bar:hover { opacity: 0.7; }
+
+        .chart-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222;
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .chart-bar:hover::after { opacity: 1; }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        /* Таблица последних событий */
+        .events-table-wrap {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .events-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .events-table th {
+            background: #0a0a0a;
+            color: #b91c1c;
+            padding: 10px 14px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.6px;
+        }
+
+        .events-table td {
+            padding: 10px 14px;
+            border-top: 1px solid #222;
+            color: #ccc;
+        }
+
+        .events-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .event-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .event-type.info    { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .event-type.warn    { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .event-type.error   { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .event-type.success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+        .event-time {
+            color: #666;
+            font-family: monospace;
+            font-size: 0.78rem;
+        }
+
+        /* Процесс/система */
+        .system-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .system-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .system-card-title {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .system-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            color: #aaa;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .system-row:last-child { border-bottom: none; }
+        .system-row strong { color: #fff; font-weight: 500; }
+
+        .progress-bar {
+            background: #0a0a0a;
+            border-radius: 4px;
+            height: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #b91c1c;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .progress-fill.ok   { background: #22c55e; }
+        .progress-fill.warn { background: #eab308; }
+        .progress-fill.bad  { background: #ef4444; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-left: 4px solid #b91c1c;
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: 8px;
+            min-width: 260px;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            animation: toastIn 0.3s ease;
+        }
+
+        .toast.success { border-left-color: #22c55e; }
+        .toast.error   { border-left-color: #ef4444; }
+        .toast.info    { border-left-color: #3b82f6; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ==================== МОДАЛКА ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: #141414;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 { margin-top: 0; color: #fff; margin-bottom: 20px; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-layout { flex-direction: column; }
+            .dashboard-sidebar { width: 100%; position: static; }
+            .form-row { flex-direction: column; gap: 0; }
+            .roster-toolbar .form-input { margin-left: 0; max-width: 100%; }
+            .monitoring-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="show"></div>
+
+<div id="content" style="display:none;">
+
+<header>
+    <h1>Legion Of The Damned</h1>
+
+    <nav>
+        <a href="{{ url_for('home') }}">Главная</a>
+        <a href="{{ url_for('dashboard') }}">Дашборд</a>
+        <a href="{{ url_for('about') }}">О клане</a>
+        <a href="{{ url_for('legion_beacon') }}">Legion Beacon</a>
+        <a href="{{ url_for('kv_map') }}" data-i18n="nav_kv_map">Карты КВ</a>
+    </nav>
+
+    <div class="header-controls">
+        <div class="lang-switcher">
+            <select id="langSelect">
+                <option value="ua">UA</option>
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="auth-block">
+            {% if user %}
+                {% set avatar_url = None %}
+                {% if user.avatar %}
+                    {% set ext = 'gif' if user.avatar.startswith('a_') else 'png' %}
+                    {% set avatar_url = 'https://cdn.discordapp.com/avatars/' ~ user.id ~ '/' ~ user.avatar ~ '.' ~ ext ~ '?size=64' %}
+                {% endif %}
+
+                <div class="user-menu" id="userMenu">
+                    <button type="button" class="user-chip" id="userMenuToggle" aria-haspopup="true" aria-expanded="false" title="{{ user.global_name or user.username }}">
+                        {% if avatar_url %}
+                            <img src="{{ avatar_url }}" alt="">
+                        {% else %}
+                            <span class="user-initial">{{ (user.global_name or user.username)[0]|upper }}</span>
+                        {% endif %}
+                        <span class="user-name">{{ user.global_name or user.username }}</span>
+                    </button>
+
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item user-dropdown-logout" data-i18n="auth_logout">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="discord-btn discord-btn-login" data-i18n-title="auth_login_title" title="Войти через Discord">
+                    <svg width="18" height="18" viewBox="0 0 71 55" fill="currentColor" aria-hidden="true">
+                        <path d="M60.1 4.9A58.9 58.9 0 0 0 45.4.4a.2.2 0 0 0-.2.1 40.6 40.6 0 0 0-1.8 3.7 54.5 54.5 0 0 0-16.3 0A38.7 38.7 0 0 0 25.3.5a.2.2 0 0 0-.2-.1 58.7 58.7 0 0 0-14.7 4.5.2.2 0 0 0-.1.1A60.3 60.3 0 0 0 .4 45.6a.2.2 0 0 0 .1.2 59.2 59.2 0 0 0 17.8 9 .2.2 0 0 0 .2-.1 42.8 42.8 0 0 0 3.7-6 .2.2 0 0 0-.1-.3 39.1 39.1 0 0 1-5.6-2.7.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42.2 42.2 0 0 0 35.8 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.7 36.7 0 0 1-5.6 2.7.2.2 0 0 0-.1.3 48.1 48.1 0 0 0 3.7 6 .2.2 0 0 0 .2.1 59 59 0 0 0 17.8-9 .2.2 0 0 0 .1-.2 59.9 59.9 0 0 0-10-40.6.2.2 0 0 0-.1-.1ZM23.7 37.4c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 3.9-2.8 7.1-6.4 7.1Z"/>
+                    </svg>
+                    <span data-i18n="auth_login">Войти</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<main class="dashboard-layout">
+    
+    <!-- ЛЕВОЕ МЕНЮ -->
+    <aside class="dashboard-sidebar">
+        <h3>Управление</h3>
+        <div class="dashboard-menu">
+            <button class="dashboard-menu-item active" data-tab="tab-general">📊 Мониторинг</button>
+            <button class="dashboard-menu-item" data-tab="tab-welcome">👋 Приветствия</button>
+            <button class="dashboard-menu-item" data-tab="tab-application">📝 Заявка</button>
+            <button class="dashboard-menu-item" data-tab="tab-kv">⚔️ Автосообщения КВ</button>
+            <button class="dashboard-menu-item" data-tab="tab-roster">👥 Состав клана</button>
+            <button class="dashboard-menu-item" data-tab="tab-clanroles">🎖️ Клановые роли</button>
+            <button class="dashboard-menu-item" data-tab="tab-drop">📡 Уведомления «Выброс»</button>
+        </div>
+    </aside>
+
+    <!-- ПРАВАЯ ЧАСТЬ -->
+    <section class="dashboard-content">
+        
+        <!-- ============================================================
+             ВКЛАДКА: Мониторинг бота (бывшие «Основные»)
+             ============================================================ -->
+        <div id="tab-general" class="dashboard-tab active">
+
+            <div class="monitoring-header">
+                <h2 style="margin:0; border:none; padding:0;">Мониторинг бота</h2>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="monitoring-status" id="botStatusBadge">
+                        <span class="status-dot"></span>
+                        <span id="botStatusText">Проверка…</span>
+                    </span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="refreshMonitoringBtn">
+                        🔄 Обновить
+                    </button>
+                </div>
+            </div>
+
+            <!-- Быстрые KPI -->
+            <div class="monitoring-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Аптайм</div>
+                    <div class="stat-value" id="statUptime">—</div>
+                    <div class="stat-sub" id="statUptimeSub">с последнего запуска</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Пинг Discord API</div>
+                    <div class="stat-value small" id="statPing">— мс</div>
+                    <div class="stat-sub">WebSocket latency</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Запросов (сегодня)</div>
+                    <div class="stat-value" id="statRequestsToday">—</div>
+                    <div class="stat-sub" id="statRequestsSub">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ошибок за 24 ч</div>
+                    <div class="stat-value small" id="statErrors">—</div>
+                    <div class="stat-sub" id="statErrorsSub">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Серверов</div>
+                    <div class="stat-value" id="statGuilds">—</div>
+                    <div class="stat-sub">Discord guilds</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Пользователей</div>
+                    <div class="stat-value" id="statUsers">—</div>
+                    <div class="stat-sub">уникальных в кэше</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Команд / мин</div>
+                    <div class="stat-value small" id="statCmdPerMin">—</div>
+                    <div class="stat-sub">последняя минута</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Состояние БД</div>
+                    <div class="stat-value small" id="statDb">—</div>
+                    <div class="stat-sub" id="statDbSub">—</div>
+                </div>
+            </div>
+
+            <!-- График активности за 24 часа -->
+            <div class="monitoring-section-title">
+                <span>Активность запросов (24 часа)</span>
+                <span style="color:#666; font-size:0.8rem; font-weight:400;" id="chartTotalLabel">—</span>
+            </div>
+            <div class="activity-chart">
+                <div class="chart-bars" id="activityChart"></div>
+                <div class="chart-labels">
+                    <span>-24ч</span>
+                    <span>-18ч</span>
+                    <span>-12ч</span>
+                    <span>-6ч</span>
+                    <span>сейчас</span>
+                </div>
+            </div>
+
+            <!-- Системная информация -->
+            <div class="monitoring-section-title">Состояние системы</div>
+            <div class="system-grid">
+                <div class="system-card">
+                    <div class="system-card-title">
+                        <span>⚙️ Процесс</span>
+                        <span id="processStatus" style="font-size:0.75rem; color:#888;">—</span>
+                    </div>
+                    <div class="system-row"><span>PID</span><strong id="sysPid">—</strong></div>
+                    <div class="system-row"><span>Версия Python</span><strong id="sysPython">—</strong></div>
+                    <div class="system-row"><span>discord.py</span><strong id="sysDpy">—</strong></div>
+                    <div class="system-row"><span>Запущен</span><strong id="sysStarted">—</strong></div>
+                </div>
+
+                <div class="system-card">
+                    <div class="system-card-title">
+                        <span>🖥️ Ресурсы</span>
+                        <span style="font-size:0.75rem; color:#888;">CPU/RAM</span>
+                    </div>
+                    <div class="system-row">
+                        <span>CPU</span><strong id="sysCpu">—%</strong>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill ok" id="sysCpuBar" style="width:0%"></div></div>
+                    <div class="system-row" style="margin-top:10px;">
+                        <span>RAM</span><strong id="sysRam">— МБ</strong>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill ok" id="sysRamBar" style="width:0%"></div></div>
+                </div>
+
+                <div class="system-card">
+                    <div class="system-card-title">
+                        <span>🔌 Discord API</span>
+                        <span id="apiStatus" style="font-size:0.75rem; color:#888;">—</span>
+                    </div>
+                    <div class="system-row"><span>WebSocket</span><strong id="apiWs">—</strong></div>
+                    <div class="system-row"><span>Пинг</span><strong id="apiPing">—</strong></div>
+                    <div class="system-row"><span>Rate-limit</span><strong id="apiRate">—</strong></div>
+                    <div class="system-row"><span>Last sync</span><strong id="apiSync">—</strong></div>
+                </div>
+
+                <div class="system-card">
+                    <div class="system-card-title">
+                        <span>🗄️ База данных</span>
+                        <span id="dbStatus" style="font-size:0.75rem; color:#888;">—</span>
+                    </div>
+                    <div class="system-row"><span>Тип</span><strong id="dbType">—</strong></div>
+                    <div class="system-row"><span>Размер</span><strong id="dbSize">—</strong></div>
+                    <div class="system-row"><span>Соединений</span><strong id="dbConn">—</strong></div>
+                    <div class="system-row"><span>Slow queries</span><strong id="dbSlow">—</strong></div>
+                </div>
+            </div>
+
+            <!-- Последние события -->
+            <div class="monitoring-section-title">
+                <span>Последние события</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="clearEventsBtn">Очистить</button>
+            </div>
+            <div class="events-table-wrap">
+                <table class="events-table">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">Время</th>
+                            <th style="width:100px;">Тип</th>
+                            <th>Событие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr><td colspan="3" style="text-align:center; color:#666; padding:30px;">События появятся здесь по мере работы бота.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="form-hint" style="margin-top: 20px;">
+                ⓘ Данные мониторинга подгружаются с бэкенда по эндпоинту <code style="color:#b91c1c;">/api/dashboard/monitoring</code>.
+                Пока бэкенд не подключён — значения генерируются локально для демонстрации интерфейса.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             ВКЛАДКА: Приветствия
+             ============================================================ -->
+        <div id="tab-welcome" class="dashboard-tab">
+            <h2>Приветствия</h2>
+            <p style="color: #888; margin-bottom: 25px;">Настройте сообщение, которое будет отправляться при входе нового участника на сервер.</p>
+
+            <form id="welcomeForm" onsubmit="event.preventDefault();">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="welcomeChannel" class="form-label">Канал для приветствий (ID)</label>
+                        <input type="text" id="welcomeChannel" class="form-input" placeholder="Например: 123456789012345678" data-validate="id">
+                        <span class="form-error">ID канала должен содержать 17–20 цифр</span>
+                        <span class="form-hint">Убедитесь, что у бота есть права писать в этот канал.</span>
+                    </div>
+                    
+                    <div class="form-group" style="max-width: 180px;">
+                        <label for="welcomeColor" class="form-label">Цвет</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="color" id="welcomeColorPicker" value="#b91c1c" style="width: 45px; height: 40px; padding: 0; border: 1px solid #333; border-radius: 6px; cursor: pointer; background: #111;">
+                            <input type="text" id="welcomeColor" value="#b91c1c" class="form-input" style="text-align: center;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="welcomeTitle" class="form-label">Заголовок (Title)</label>
+                        <input type="text" id="welcomeTitle" class="form-input" value="Добро пожаловать на сервер!">
+                    </div>
+                    <div class="form-group">
+                        <label for="welcomeImage" class="form-label">Ссылка на картинку (Image URL)</label>
+                        <input type="url" id="welcomeImage" class="form-input" placeholder="https://example.com/banner.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="welcomeDesc" class="form-label">Текст сообщения (Description)</label>
+                    <textarea id="welcomeDesc" class="form-textarea" placeholder="Привет, {user}! Добро пожаловать в {server}.">Привет, {user}! Добро пожаловать на сервер **{server}**. Теперь нас {member_count}!</textarea>
+                    <div class="form-hint">
+                        Доступные переменные: 
+                        <span class="var-tag">{user}</span> — упоминание, 
+                        <span class="var-tag">{server}</span> — имя сервера, 
+                        <span class="var-tag">{member_count}</span> — количество участников.
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+                    <button type="button" class="btn btn-secondary" data-test-send="welcome">Тест (Отправить в Discord)</button>
+                </div>
+            </form>
+
+            <div class="preview-container">
+                <h3 class="preview-title">Предпросмотр сообщения</h3>
+                <div class="discord-preview-box">
+                    <div class="dc-message">
+                        <div class="dc-avatar">LB</div>
+                        <div class="dc-body">
+                            <div class="dc-header">
+                                <span class="dc-username">Legion Beacon</span>
+                                <span class="dc-bot-tag">APP</span>
+                                <span class="dc-timestamp">сегодня в 12:00</span>
+                            </div>
+                            
+                            <div class="dc-embed" id="previewEmbed">
+                                <div class="dc-embed-title" id="previewEmbedTitle">Добро пожаловать на сервер!</div>
+                                <div class="dc-embed-desc" id="previewEmbedDesc">
+                                    Привет, <strong>@НовыйУчастник</strong>! Добро пожаловать на сервер <strong>Legion Of The Damned</strong>. Теперь нас 150!
+                                </div>
+                                <img class="dc-embed-image" id="previewEmbedImg" src="" alt="Welcome Image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             ВКЛАДКА: Заявка
+             ============================================================ -->
+        <div id="tab-application" class="dashboard-tab">
+            <h2>Команда /заявка</h2>
+            <p style="color: #888; margin-bottom: 25px;">
+                Настройте ветки клана: каждая ветка имеет свой канал, роль-модератора и набор вопросов.
+                Пользователь при подаче заявки выберет нужную ветку.
+            </p>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" id="addBranchBtn">➕ Добавить ветку</button>
+            </div>
+
+            <div id="branchesList">
+                <div class="branches-empty">Ветки ещё не созданы. Нажмите «Добавить ветку».</div>
+            </div>
+
+            <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 25px;">
+                <h3 class="preview-title">Общие настройки</h3>
+                <div class="form-group">
+                    <label class="form-label">Текст подтверждения после отправки</label>
+                    <input type="text" id="appConfirmText" class="form-input"
+                           value="✅ Спасибо! Ваша заявка отправлена на рассмотрение в выбранную ветку.">
+                </div>
+                <button type="button" class="btn btn-primary" id="saveApplicationBtn">💾 Сохранить общие настройки</button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             ВКЛАДКА: Автосообщения КВ
+             ============================================================ -->
+        <div id="tab-kv" class="dashboard-tab">
+            <h2>Автосообщения «ок КВ»</h2>
+            <p style="color: #888; margin-bottom: 25px;">
+                Бот будет автоматически напоминать клану о клановых войнах и собирать подтверждения «ок».
+            </p>
+
+            <form id="kvForm" onsubmit="event.preventDefault();">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Канал для КВ-уведомлений (ID)</label>
+                        <input type="text" id="kvChannel" class="form-input" placeholder="123456789012345678" data-validate="id">
+                        <span class="form-error">ID канала должен содержать 17–20 цифр</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Роль для пинга (ID)</label>
+                        <input type="text" id="kvPingRole" class="form-input" placeholder="123456789012345678" data-validate="id">
+                        <span class="form-error">ID роли должен содержать 17–20 цифр</span>
+                        <span class="form-hint">Кого пинговать при старте сбора.</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">За сколько минут до КВ напоминать</label>
+                        <input type="number" id="kvReminderMinutes" class="form-input" value="30" min="5" max="240">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Интервал повторного напоминания (мин)</label>
+                        <input type="number" id="kvRepeatMinutes" class="form-input" value="10" min="1" max="60">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Шаблон сообщения о сборе</label>
+                    <textarea id="kvMessage" class="form-textarea" data-preview="kv">⚔️ **Клановые войны** — через {minutes} минут!
+Время: {time}
+Отряд: {squad}
+
+Подтвердите участие реакцией ✅ или напишите «ок».</textarea>
+                    <div class="form-hint">
+                        Переменные:
+                        <span class="var-tag">{minutes}</span> — минут до старта,
+                        <span class="var-tag">{time}</span> — время КВ,
+                        <span class="var-tag">{squad}</span> — отряд,
+                        <span class="var-tag">{opponent}</span> — противник.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="display:flex; align-items:center; cursor:pointer;">
+                        <input type="checkbox" id="kvAutoClose" style="margin-right: 8px;" checked>
+                        Закрывать сбор автоматически за 5 минут до старта
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+                    <button type="button" class="btn btn-secondary" data-test-send="kv">Тест (Отправить в Discord)</button>
+                </div>
+            </form>
+
+            <div class="preview-container">
+                <h3 class="preview-title">Предпросмотр сообщения</h3>
+                <div class="discord-preview-box">
+                    <div class="dc-message">
+                        <div class="dc-avatar">LB</div>
+                        <div class="dc-body">
+                            <div class="dc-header">
+                                <span class="dc-username">Legion Beacon</span>
+                                <span class="dc-bot-tag">APP</span>
+                                <span class="dc-timestamp">сегодня в 12:00</span>
+                            </div>
+                            <div class="dc-text-content" id="kvPreviewText">⚔️ Клановые войны — через 30 минут!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             ВКЛАДКА: Состав клана
+             ============================================================ -->
+        <div id="tab-roster" class="dashboard-tab">
+            <h2>Состав клана</h2>
+            <p style="color: #888; margin-bottom: 25px;">
+                Управление списком участников: отряды, звания, активность.
+            </p>
+
+            <div class="roster-toolbar">
+                <button type="button" class="btn btn-primary" id="rosterAddBtn">➕ Добавить участника</button>
+                <button type="button" class="btn btn-secondary" id="rosterSyncBtn">🔄 Импорт из Discord</button>
+                <input type="text" class="form-input" id="rosterSearch" placeholder="🔍 Поиск по нику...">
+            </div>
+
+            <div class="roster-table-wrap">
+                <table class="roster-table">
+                    <thead>
+                        <tr>
+                            <th>Игрок</th>
+                            <th>Отряд</th>
+                            <th>Звание</th>
+                            <th>Активность</th>
+                            <th style="text-align:right;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rosterTableBody">
+                        <tr>
+                            <td colspan="5" class="roster-empty">Список пуст. Добавьте участников или импортируйте из Discord.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="form-hint" style="margin-top: 12px;">
+                Данные хранятся локально в браузере и синхронизируются с ботом при сохранении (демо-режим).
+            </p>
+        </div>
+
+        <!-- ============================================================
+             ВКЛАДКА: Клановые роли
+             ============================================================ -->
+        <div id="tab-clanroles" class="dashboard-tab">
+            <h2>Клановые роли</h2>
+            <p style="color: #888; margin-bottom: 25px;">
+                Привяжите Discord-роли к категориям клана: отряды, звания, особые статусы.
+            </p>
+
+            <form id="clanRoleForm" onsubmit="event.preventDefault();">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Категория</label>
+                        <select id="clanRoleCategory" class="form-select">
+                            <option value="squad">Отряд</option>
+                            <option value="rank">Звание</option>
+                            <option value="special">Особый статус</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Название в клане</label>
+                        <input type="text" id="clanRoleName" class="form-input" placeholder="Например: Альфа-отряд / Офицер">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Discord-роль (ID)</label>
+                        <input type="text" id="clanRoleDiscordId" class="form-input" placeholder="123456789012345678" data-validate="id">
+                        <span class="form-error">ID роли должен содержать 17–20 цифр</span>
+                    </div>
+                    <div class="form-group" style="max-width: 130px;">
+                        <label class="form-label">Цвет</label>
+                        <input type="color" id="clanRoleColor" value="#b91c1c"
+                               style="width: 100%; height: 40px; padding: 0; border: 1px solid #333; border-radius: 6px; cursor: pointer; background: #111;">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-bottom: 25px;">➕ Добавить роль</button>
+            </form>
+
+            <div class="roles-grid" id="clanRolesList">
+                <div class="role-empty">Роли ещё не добавлены.</div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             ВКЛАДКА: Уведомления «Выброс»
+             ============================================================ -->
+        <div id="tab-drop" class="dashboard-tab">
+            <h2>Уведомления «Выброс»</h2>
+            <p style="color: #888; margin-bottom: 25px;">
+                Для каждого игрового сервера настройте канал уведомлений, шаблон сообщения и роли,
+                которые будут пинговаться.
+            </p>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" id="addServerBtn">➕ Добавить игровой сервер</button>
+                <button type="button" class="btn btn-secondary" id="saveServersBtn">💾 Сохранить все настройки</button>
+            </div>
+
+            <div id="serversList">
+                <div class="branches-empty">Игровые серверы ещё не настроены. Нажмите «Добавить игровой сервер».</div>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+</div>
+
+<!-- TOAST-контейнер -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Модалка добавления участника -->
+<div class="modal-overlay" id="rosterModal">
+    <div class="modal">
+        <h3>Добавить участника</h3>
+        <form id="rosterForm" onsubmit="event.preventDefault();">
+            <div class="form-group">
+                <label class="form-label">Ник в игре</label>
+                <input type="text" id="rosterName" class="form-input" required placeholder="Например: ShadowWarrior">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Отряд</label>
+                    <select id="rosterSquad" class="form-select">
+                        <option value="Альфа">Альфа</option>
+                        <option value="Бета">Бета</option>
+                        <option value="Гамма">Гамма</option>
+                        <option value="Резерв">Резерв</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Звание</label>
+                    <select id="rosterRank" class="form-select">
+                        <option value="Новобранец">Новобранец</option>
+                        <option value="Боец">Боец</option>
+                        <option value="Ветеран">Ветеран</option>
+                        <option value="Офицер">Офицер</option>
+                        <option value="Лидер">Лидер</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Активность (часов/нед.)</label>
+                <input type="number" id="rosterActivity" class="form-input" value="10" min="0" max="168">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="rosterCancelBtn">Отмена</button>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/discord-widget.js') }}"></script>
+
+<script>
+/* ==================== LOADER ==================== */
+window.addEventListener("load", () => {
+    document.getElementById("loader").classList.add("hide");
+    setTimeout(() => {
+        document.getElementById("content").style.display = "block";
+    }, 500);
+});
+
+/* ==================== TOASTS ==================== */
+function showToast(message, type = "info", timeout = 3500) {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateX(40px)";
+        el.style.transition = "all 0.3s";
+        setTimeout(() => el.remove(), 300);
+    }, timeout);
+}
+
+/* ==================== STORAGE HELPERS ==================== */
+const STORAGE_PREFIX = "lotd_dashboard_";
+const storage = {
+    get(key, fallback = null) {
+        try {
+            const raw = localStorage.getItem(STORAGE_PREFIX + key);
+            return raw ? JSON.parse(raw) : fallback;
+        } catch { return fallback; }
+    },
+    set(key, value) {
+        try {
+            localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+        } catch (e) { console.warn("Storage error", e); }
+    }
+};
+
+/* ==================== УТИЛИТЫ ==================== */
+const DISCORD_ID_RE = /^\d{17,20}$/;
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, s => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[s]));
+}
+function escapeAttr(str) {
+    return String(str).replace(/[^#a-fA-F0-9]/g, "");
+}
+function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function formatUptime(seconds) {
+    seconds = Math.floor(seconds);
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (d > 0) return `${d}д ${h}ч ${m}м`;
+    if (h > 0) return `${h}ч ${m}м`;
+    if (m > 0) return `${m}м ${s}с`;
+    return `${s}с`;
+}
+function formatRelativeTime(date) {
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}с назад`;
+    if (diff < 3600) return `${Math.floor(diff/60)}м назад`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}ч назад`;
+    return `${Math.floor(diff/86400)}д назад`;
+}
+function formatTime(date) {
+    return date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+/* ==================== ВАЛИДАЦИЯ ==================== */
+function validateIdField(input) {
+    if (!input || input.dataset.validate !== "id") return true;
+    const val = input.value.trim();
+    const group = input.closest(".form-group");
+    if (!val) {
+        input.classList.remove("error", "valid");
+        group?.classList.remove("has-error");
+        return true;
+    }
+    const ok = DISCORD_ID_RE.test(val);
+    input.classList.toggle("error", !ok);
+    input.classList.toggle("valid", ok);
+    group?.classList.toggle("has-error", !ok);
+    return ok;
+}
+
+document.addEventListener("input", (e) => {
+    if (e.target.matches('[data-validate="id"]')) {
+        validateIdField(e.target);
+    }
+});
+
+function validateForm(formEl) {
+    let ok = true;
+    formEl.querySelectorAll('[data-validate="id"]').forEach(inp => {
+        if (!validateIdField(inp)) ok = false;
+    });
+    return ok;
+}
+
+/* ==================== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const menuItems = document.querySelectorAll(".dashboard-menu-item");
+    const tabs = document.querySelectorAll(".dashboard-tab");
+
+    menuItems.forEach(item => {
+        item.addEventListener("click", () => {
+            menuItems.forEach(i => i.classList.remove("active"));
+            tabs.forEach(t => t.classList.remove("active"));
+            item.classList.add("active");
+            const tabId = item.getAttribute("data-tab");
+            document.getElementById(tabId)?.classList.add("active");
+        });
+    });
+});
+
+/* ============================================================
+   МОНИТОРИНГ БОТА
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    const refreshBtn = document.getElementById("refreshMonitoringBtn");
+    if (!refreshBtn) return;
+
+    const botStatusBadge = document.getElementById("botStatusBadge");
+    const botStatusText = document.getElementById("botStatusText");
+
+    const elUptime = document.getElementById("statUptime");
+    const elUptimeSub = document.getElementById("statUptimeSub");
+    const elPing = document.getElementById("statPing");
+    const elRequestsToday = document.getElementById("statRequestsToday");
+    const elRequestsSub = document.getElementById("statRequestsSub");
+    const elErrors = document.getElementById("statErrors");
+    const elErrorsSub = document.getElementById("statErrorsSub");
+    const elGuilds = document.getElementById("statGuilds");
+    const elUsers = document.getElementById("statUsers");
+    const elCmdPerMin = document.getElementById("statCmdPerMin");
+    const elDb = document.getElementById("statDb");
+    const elDbSub = document.getElementById("statDbSub");
+
+    const chartContainer = document.getElementById("activityChart");
+    const chartTotalLabel = document.getElementById("chartTotalLabel");
+    const eventsTableBody = document.getElementById("eventsTableBody");
+    const clearEventsBtn = document.getElementById("clearEventsBtn");
+
+    /* --- События (внутренний лог мониторинга) --- */
+    let monitorEvents = storage.get("monitorEvents", []);
+
+    function pushEvent(type, message) {
+        monitorEvents.unshift({
+            id: uid(),
+            time: Date.now(),
+            type,
+            message
+        });
+        monitorEvents = monitorEvents.slice(0, 50);
+        storage.set("monitorEvents", monitorEvents);
+        renderEvents();
+    }
+
+    function renderEvents() {
+        if (monitorEvents.length === 0) {
+            eventsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#666; padding:30px;">События появятся здесь по мере работы бота.</td></tr>`;
+            return;
+        }
+        eventsTableBody.innerHTML = monitorEvents.map(ev => `
+            <tr>
+                <td class="event-time">${escapeHtml(formatTime(new Date(ev.time)))}</td>
+                <td><span class="event-type ${ev.type}">${ev.type}</span></td>
+                <td>${escapeHtml(ev.message)}</td>
+            </tr>
+        `).join("");
+    }
+
+    clearEventsBtn?.addEventListener("click", () => {
+        monitorEvents = [];
+        storage.set("monitorEvents", []);
+        renderEvents();
+        showToast("Журнал событий очищен", "info");
+    });
+
+    /* --- Демо-генератор метрик (заменится на fetch с бэкенда) --- */
+    function generateMockMetrics() {
+        const now = new Date();
+        const startedAt = now.getTime() - (2 * 86400 + 5 * 3600 + 23 * 60) * 1000;
+        const uptimeSec = Math.floor((now.getTime() - startedAt) / 1000);
+
+        // 24 точки (по часу)
+        const chart = [];
+        for (let i = 0; i < 24; i++) {
+            const base = 40 + Math.sin(i / 2) * 20 + Math.random() * 30;
+            chart.push(Math.floor(Math.max(5, base)));
+        }
+        const chartTotal = chart.reduce((a, b) => a + b, 0);
+
+        const requestsToday = 12450 + Math.floor(Math.random() * 1500);
+        const requestsPrev = 11800;
+        const requestDelta = ((requestsToday - requestsPrev) / requestsPrev * 100).toFixed(1);
+
+        const errors24h = Math.floor(Math.random() * 8);
+        const cmdPerMin = Math.floor(Math.random() * 15) + 2;
+
+        const pingMs = 28 + Math.floor(Math.random() * 20);
+        const cpu = 12 + Math.floor(Math.random() * 30);
+        const ramUsed = 180 + Math.floor(Math.random() * 120);
+        const ramMax = 512;
+
+        return {
+            online: true,
+            degraded: false,
+            uptimeSec,
+            startedAt,
+            pingMs,
+            requestsToday,
+            requestDelta,
+            errors24h,
+            guilds: 3,
+            users: 1240 + Math.floor(Math.random() * 50),
+            cmdPerMin,
+            chart,
+            chartTotal,
+            db: { ok: true, type: "SQLite", sizeMb: 4.2, conn: 1, slow: 0 },
+            system: {
+                pid: 10234,
+                python: "3.11.7",
+                dpy: "2.3.2",
+                cpuPct: cpu,
+                ramUsedMb: ramUsed,
+                ramMaxMb: ramMax
+            },
+            api: {
+                ws: "connected",
+                rate: "12/50",
+                lastSync: Date.now() - 5 * 1000
+            }
+        };
+    }
+
+    /* --- Отрисовка метрик --- */
+    function applyMetrics(m) {
+        // Статус
+        botStatusBadge.classList.remove("online", "offline", "degraded");
+        if (m.online && !m.degraded) {
+            botStatusBadge.classList.add("online");
+            botStatusText.textContent = "Активен";
+        } else if (m.online && m.degraded) {
+            botStatusBadge.classList.add("degraded");
+            botStatusText.textContent = "Работает с деградацией";
+        } else {
+            botStatusBadge.classList.add("offline");
+            botStatusText.textContent = "Не активен";
+        }
+
+        // KPI
+        elUptime.textContent = formatUptime(m.uptimeSec);
+        elUptimeSub.textContent = "с " + new Date(m.startedAt).toLocaleString("ru-RU", {
+            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+        });
+
+        elPing.textContent = m.pingMs + " мс";
+        elPing.className = "stat-value small " + (m.pingMs < 80 ? "ok" : m.pingMs < 150 ? "warn" : "bad");
+
+        elRequestsToday.textContent = m.requestsToday.toLocaleString("ru-RU");
+        const delta = parseFloat(m.requestDelta);
+        elRequestsSub.innerHTML = `<span class="stat-trend ${delta < 0 ? 'down' : ''}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)}%</span> к вчера`;
+
+        elErrors.textContent = m.errors24h;
+        elErrors.className = "stat-value small " + (m.errors24h === 0 ? "ok" : m.errors24h < 5 ? "warn" : "bad");
+        elErrorsSub.textContent = m.errors24h === 0 ? "чисто" : "требует внимания";
+
+        elGuilds.textContent = m.guilds;
+        elUsers.textContent = m.users.toLocaleString("ru-RU");
+        elCmdPerMin.textContent = m.cmdPerMin;
+
+        // БД
+        elDb.textContent = m.db.ok ? "OK" : "Ошибка";
+        elDb.className = "stat-value small " + (m.db.ok ? "ok" : "bad");
+        elDbSub.textContent = `${m.db.type}, ${m.db.sizeMb} МБ`;
+
+        // График
+        renderChart(m.chart);
+        chartTotalLabel.textContent = `${m.chartTotal.toLocaleString("ru-RU")} запросов`;
+
+        // Система
+        document.getElementById("sysPid").textContent = m.system.pid;
+        document.getElementById("sysPython").textContent = m.system.python;
+        document.getElementById("sysDpy").textContent = m.system.dpy;
+        document.getElementById("sysStarted").textContent = new Date(m.startedAt).toLocaleDateString("ru-RU");
+        document.getElementById("processStatus").textContent = m.online ? "running" : "stopped";
+        document.getElementById("processStatus").style.color = m.online ? "#22c55e" : "#ef4444";
+
+        // Ресурсы
+        const cpu = m.system.cpuPct;
+        const cpuBar = document.getElementById("sysCpuBar");
+        document.getElementById("sysCpu").textContent = cpu + "%";
+        cpuBar.style.width = Math.min(100, cpu) + "%";
+        cpuBar.className = "progress-fill " + (cpu < 60 ? "ok" : cpu < 85 ? "warn" : "bad");
+
+        const ramPct = Math.round(m.system.ramUsedMb / m.system.ramMaxMb * 100);
+        const ramBar = document.getElementById("sysRamBar");
+        document.getElementById("sysRam").textContent = m.system.ramUsedMb + " / " + m.system.ramMaxMb + " МБ";
+        ramBar.style.width = Math.min(100, ramPct) + "%";
+        ramBar.className = "progress-fill " + (ramPct < 70 ? "ok" : ramPct < 90 ? "warn" : "bad");
+
+        // API
+        document.getElementById("apiStatus").textContent = m.api.ws === "connected" ? "OK" : "Проблема";
+        document.getElementById("apiStatus").style.color = m.api.ws === "connected" ? "#22c55e" : "#ef4444";
+        document.getElementById("apiWs").textContent = m.api.ws;
+        document.getElementById("apiPing").textContent = m.pingMs + " мс";
+        document.getElementById("apiRate").textContent = m.api.rate;
+        document.getElementById("apiSync").textContent = formatRelativeTime(new Date(m.api.lastSync));
+
+        // БД детально
+        document.getElementById("dbStatus").textContent = m.db.ok ? "OK" : "Ошибка";
+        document.getElementById("dbStatus").style.color = m.db.ok ? "#22c55e" : "#ef4444";
+        document.getElementById("dbType").textContent = m.db.type;
+        document.getElementById("dbSize").textContent = m.db.sizeMb + " МБ";
+        document.getElementById("dbConn").textContent = m.db.conn;
+        document.getElementById("dbSlow").textContent = m.db.slow;
+    }
+
+    function renderChart(data) {
+        if (!chartContainer) return;
+        const max = Math.max(...data, 1);
+        chartContainer.innerHTML = data.map((v, i) => {
+            const pct = Math.max(3, (v / max) * 100);
+            return `<div class="chart-bar" style="height:${pct}%" data-value="${v}"></div>`;
+        }).join("");
+    }
+
+    /* --- Загрузка с бэкенда (с фоллбэком на мок) --- */
+    async function loadMetrics() {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = "⏳ Загрузка...";
+
+        try {
+            const res = await fetch("/api/dashboard/monitoring", {
+                headers: { "Accept": "application/json" }
+            });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+            applyMetrics(data);
+            pushEvent("success", "Метрики мониторинга обновлены");
+        } catch (err) {
+            // Бэкенд недоступен — используем демо-данные
+            const mock = generateMockMetrics();
+            applyMetrics(mock);
+            pushEvent("warn", "Бэкенд мониторинга недоступен, показаны демо-данные");
+        } finally {
+            refreshBtn.disabled = false;
+            refreshBtn.textContent = "🔄 Обновить";
+        }
+    }
+
+    refreshBtn.addEventListener("click", loadMetrics);
+
+    // Первичная загрузка + автообновление раз в 30 секунд
+    loadMetrics();
+    setInterval(loadMetrics, 30000);
+
+    // Начальные события
+    if (monitorEvents.length === 0) {
+        pushEvent("info", "Дашборд мониторинга инициализирован");
+        pushEvent("success", "Бот подключён к Discord Gateway");
+    } else {
+        renderEvents();
+    }
+});
+
+/* ==================== ПРИВЕТСТВИЯ ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const elTitle = document.getElementById("welcomeTitle");
+    const elDesc = document.getElementById("welcomeDesc");
+    const elImage = document.getElementById("welcomeImage");
+    const elColor = document.getElementById("welcomeColor");
+    const elColorPicker = document.getElementById("welcomeColorPicker");
+
+    const previewEmbed = document.getElementById("previewEmbed");
+    const previewTitle = document.getElementById("previewEmbedTitle");
+    const previewDesc = document.getElementById("previewEmbedDesc");
+    const previewImg = document.getElementById("previewEmbedImg");
+
+    if (!elTitle) return;
+
+    elColorPicker.addEventListener("input", (e) => {
+        elColor.value = e.target.value;
+        updateWelcomePreview();
+    });
+    elColor.addEventListener("input", (e) => {
+        if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+            elColorPicker.value = e.target.value;
+        }
+        updateWelcomePreview();
+    });
+
+    function updateWelcomePreview() {
+        const titleVal = elTitle.value.trim();
+        const descVal = elDesc.value.trim();
+        const imgVal = elImage.value.trim();
+        const colorVal = elColor.value || "#b91c1c";
+
+        previewEmbed.style.borderLeftColor = colorVal;
+
+        if (titleVal) {
+            previewTitle.textContent = titleVal;
+            previewTitle.style.display = "block";
+        } else {
+            previewTitle.style.display = "none";
+        }
+
+        let formattedDesc = descVal
+            .replace(/{user}/g, "@НовыйУчастник")
+            .replace(/{server}/g, "Legion Of The Damned")
+            .replace(/{member_count}/g, "150");
+
+        formattedDesc = formattedDesc
+            .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+            .replace(/__(.+?)__/g, "<u>$1</u>")
+            .replace(/\n/g, "<br>");
+
+        previewDesc.innerHTML = formattedDesc;
+        previewDesc.style.display = formattedDesc ? "block" : "none";
+
+        if (imgVal) {
+            previewImg.src = imgVal;
+            previewImg.style.display = "block";
+            previewImg.onerror = () => { previewImg.style.display = "none"; };
+        } else {
+            previewImg.style.display = "none";
+        }
+    }
+
+    [elTitle, elDesc, elImage].forEach(el => {
+        el.addEventListener("input", updateWelcomePreview);
+    });
+
+    updateWelcomePreview();
+
+    const saved = storage.get("welcome");
+    if (saved) {
+        if (saved.channel) document.getElementById("welcomeChannel").value = saved.channel;
+        if (saved.title) elTitle.value = saved.title;
+        if (saved.desc) elDesc.value = saved.desc;
+        if (saved.image) elImage.value = saved.image;
+        if (saved.color) {
+            elColor.value = saved.color;
+            elColorPicker.value = saved.color;
+        }
+        updateWelcomePreview();
+    }
+
+    document.getElementById("welcomeForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+        if (!validateForm(form)) {
+            showToast("Проверьте корректность ID", "error");
+            return;
+        }
+        storage.set("welcome", {
+            channel: document.getElementById("welcomeChannel").value.trim(),
+            title: document.getElementById("welcomeTitle").value.trim(),
+            desc: document.getElementById("welcomeDesc").value.trim(),
+            image: document.getElementById("welcomeImage").value.trim(),
+            color: document.getElementById("welcomeColor").value.trim()
+        });
+        showToast("Настройки приветствий сохранены", "success");
+    });
+});
+
+/* ==================== КВ ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const kvMessage = document.getElementById("kvMessage");
+    const kvPreview = document.getElementById("kvPreviewText");
+    if (!kvMessage || !kvPreview) return;
+
+    function updateKvPreview() {
+        let text = kvMessage.value
+            .replace(/{minutes}/g, "30")
+            .replace(/{time}/g, "20:00")
+            .replace(/{squad}/g, "Альфа")
+            .replace(/{opponent}/g, "Enemy Clan");
+        text = text
+            .replace(/\*\*(.+?)\*\*/g, "$1")
+            .replace(/\n/g, " ");
+        kvPreview.textContent = text;
+    }
+
+    kvMessage.addEventListener("input", updateKvPreview);
+    updateKvPreview();
+
+    const saved = storage.get("kv");
+    if (saved) {
+        if (saved.channel) document.getElementById("kvChannel").value = saved.channel;
+        if (saved.pingRole) document.getElementById("kvPingRole").value = saved.pingRole;
+        if (saved.reminderMinutes) document.getElementById("kvReminderMinutes").value = saved.reminderMinutes;
+        if (saved.repeatMinutes) document.getElementById("kvRepeatMinutes").value = saved.repeatMinutes;
+        if (saved.message) kvMessage.value = saved.message;
+        if (typeof saved.autoClose === "boolean") document.getElementById("kvAutoClose").checked = saved.autoClose;
+        updateKvPreview();
+    }
+
+    document.getElementById("kvForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+        if (!validateForm(form)) {
+            showToast("Проверьте корректность ID", "error");
+            return;
+        }
+        storage.set("kv", {
+            channel: document.getElementById("kvChannel").value.trim(),
+            pingRole: document.getElementById("kvPingRole").value.trim(),
+            reminderMinutes: parseInt(document.getElementById("kvReminderMinutes").value, 10) || 30,
+            repeatMinutes: parseInt(document.getElementById("kvRepeatMinutes").value, 10) || 10,
+            message: document.getElementById("kvMessage").value,
+            autoClose: document.getElementById("kvAutoClose").checked
+        });
+        showToast("Настройки КВ сохранены", "success");
+    });
+});
+
+/* ==================== ТЕСТ-ОТПРАВКА ==================== */
+document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-test-send]");
+    if (!btn) return;
+    const kind = btn.dataset.testSend;
+    const messages = {
+        welcome: "Тестовое приветственное сообщение отправлено",
+        kv: "Тестовое КВ-уведомление отправлено"
+    };
+    showToast(messages[kind] || "Тест отправлен", "info");
+});
+
+/* ==================== СОСТАВ КЛАНА ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const tbody = document.getElementById("rosterTableBody");
+    const searchInput = document.getElementById("rosterSearch");
+    const addBtn = document.getElementById("rosterAddBtn");
+    const syncBtn = document.getElementById("rosterSyncBtn");
+    const modal = document.getElementById("rosterModal");
+    const modalCancel = document.getElementById("rosterCancelBtn");
+    const rosterForm = document.getElementById("rosterForm");
+    if (!tbody) return;
+
+    let roster = storage.get("roster", []);
+
+    function renderRoster() {
+        const q = (searchInput?.value || "").trim().toLowerCase();
+        const filtered = roster.filter(r => !q || r.name.toLowerCase().includes(q));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="roster-empty">${
+                roster.length === 0
+                    ? "Список пуст. Добавьте участников или импортируйте из Discord."
+                    : "Ничего не найдено."
+            }</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(r => `
+            <tr data-id="${r.id}">
+                <td><strong style="color:#fff;">${escapeHtml(r.name)}</strong></td>
+                <td>${escapeHtml(r.squad)}</td>
+                <td>${escapeHtml(r.rank)}</td>
+                <td>${r.activity} ч/нед.</td>
+                <td style="text-align:right;">
+                    <button type="button" class="btn btn-danger" data-remove="${r.id}">Удалить</button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    function saveRoster() { storage.set("roster", roster); }
+
+    addBtn?.addEventListener("click", () => {
+        modal.classList.add("open");
+        setTimeout(() => document.getElementById("rosterName").focus(), 100);
+    });
+
+    modalCancel?.addEventListener("click", () => {
+        modal.classList.remove("open");
+        rosterForm.reset();
+    });
+
+    modal?.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.remove("open");
+    });
+
+    rosterForm?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = document.getElementById("rosterName").value.trim();
+        if (!name) return;
+        roster.push({
+            id: uid(),
+            name,
+            squad: document.getElementById("rosterSquad").value,
+            rank: document.getElementById("rosterRank").value,
+            activity: parseInt(document.getElementById("rosterActivity").value, 10) || 0
+        });
+        saveRoster();
+        renderRoster();
+        modal.classList.remove("open");
+        rosterForm.reset();
+        showToast(`Участник «${name}» добавлен`, "success");
+    });
+
+    tbody.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-remove]");
+        if (!btn) return;
+        roster = roster.filter(r => r.id !== btn.dataset.remove);
+        saveRoster();
+        renderRoster();
+        showToast("Участник удалён", "info");
+    });
+
+    searchInput?.addEventListener("input", renderRoster);
+
+    syncBtn?.addEventListener("click", () => {
+        showToast("Импорт из Discord пока не реализован на бэкенде", "info");
+    });
+
+    renderRoster();
+});
+
+/* ==================== КЛАНОВЫЕ РОЛИ ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("clanRoleForm");
+    const list = document.getElementById("clanRolesList");
+    if (!form || !list) return;
+
+    let roles = storage.get("clanRoles", []);
+
+    const badgeMap = {
+        squad: { cls: "role-badge-squad", label: "ОТРЯД" },
+        rank: { cls: "role-badge-rank", label: "ЗВАНИЕ" },
+        special: { cls: "role-badge-special", label: "ОСОБЫЙ" }
+    };
+
+    function renderRoles() {
+        if (roles.length === 0) {
+            list.innerHTML = `<div class="role-empty">Роли ещё не добавлены.</div>`;
+            return;
+        }
+        list.innerHTML = roles.map(r => {
+            const badge = badgeMap[r.category] || badgeMap.squad;
+            return `
+                <div class="role-card" style="border-left: 4px solid ${escapeAttr(r.color || "#b91c1c")};">
+                    <div class="role-card-header">
+                        <span class="role-card-name">${escapeHtml(r.name)}</span>
+                        <span class="role-badge ${badge.cls}">${badge.label}</span>
+                    </div>
+                    <div class="role-card-id">ID: ${escapeHtml(r.discordId)}</div>
+                    <button type="button" class="btn btn-danger" data-remove-role="${r.id}">Удалить</button>
+                </div>
+            `;
+        }).join("");
+    }
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!validateForm(form)) {
+            showToast("Проверьте корректность ID роли", "error");
+            return;
+        }
+        const name = document.getElementById("clanRoleName").value.trim();
+        const discordId = document.getElementById("clanRoleDiscordId").value.trim();
+        const category = document.getElementById("clanRoleCategory").value;
+        const color = document.getElementById("clanRoleColor").value;
+
+        if (!name) {
+            showToast("Введите название роли", "error");
+            return;
+        }
+        if (!DISCORD_ID_RE.test(discordId)) {
+            showToast("Введите корректный ID Discord-роли", "error");
+            return;
+        }
+        if (roles.some(r => r.discordId === discordId)) {
+            showToast("Роль с таким ID уже добавлена", "error");
+            return;
+        }
+
+        roles.push({ id: uid(), name, discordId, category, color });
+        storage.set("clanRoles", roles);
+        renderRoles();
+        form.reset();
+        document.getElementById("clanRoleColor").value = "#b91c1c";
+        showToast(`Роль «${name}» добавлена`, "success");
+    });
+
+    list.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-remove-role]");
+        if (!btn) return;
+        roles = roles.filter(r => r.id !== btn.dataset.removeRole);
+        storage.set("clanRoles", roles);
+        renderRoles();
+        showToast("Роль удалена", "info");
+    });
+
+    renderRoles();
+});
+
+/* ==================== ЗАЯВКА: ВЕТКИ ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const list = document.getElementById("branchesList");
+    const addBtn = document.getElementById("addBranchBtn");
+    const saveBtn = document.getElementById("saveApplicationBtn");
+    const confirmInput = document.getElementById("appConfirmText");
+    if (!list || !addBtn) return;
+
+    let branches = storage.get("applicationBranches", []);
+    let common = storage.get("applicationCommon", null);
+
+    if (common && common.confirmText) {
+        confirmInput.value = common.confirmText;
+    }
+
+    function renderBranches() {
+        if (branches.length === 0) {
+            list.innerHTML = `<div class="branches-empty">Ветки ещё не созданы. Нажмите «Добавить ветку».</div>`;
+            return;
+        }
+
+        list.innerHTML = branches.map(b => `
+            <div class="branch-card" data-branch-id="${b.id}">
+                <div class="branch-card-header">
+                    <div class="branch-card-title">
+                        ${escapeHtml(b.name || "Без названия")}
+                        ${b.enabled ? '<span>активна</span>' : '<span style="color:#666;">выкл.</span>'}
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; color:#888; font-size:0.85rem; cursor:pointer;">
+                            <input type="checkbox" data-branch-toggle="${b.id}" ${b.enabled ? "checked" : ""}>
+                            Вкл.
+                        </label>
+                        <button type="button" class="btn btn-danger" data-branch-remove="${b.id}">Удалить</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Название ветки</label>
+                        <input type="text" class="form-input" data-branch-field="name" data-branch-id="${b.id}"
+                               value="${escapeHtml(b.name || "")}" placeholder="Например: Основной состав / Академия">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Канал для заявок (ID)</label>
+                        <input type="text" class="form-input" data-branch-field="channel" data-branch-id="${b.id}"
+                               value="${escapeHtml(b.channel || "")}" placeholder="123456789012345678" data-validate="id">
+                        <span class="form-error">ID канала должен содержать 17–20 цифр</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Роль-модератор (ID)</label>
+                        <input type="text" class="form-input" data-branch-field="reviewRole" data-branch-id="${b.id}"
+                               value="${escapeHtml(b.reviewRole || "")}" placeholder="123456789012345678" data-validate="id">
+                        <span class="form-error">ID роли должен содержать 17–20 цифр</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Вопросы формы (по одному на строку)</label>
+                    <textarea class="form-textarea" data-branch-field="questions" data-branch-id="${b.id}"
+                              placeholder="Ник в игре&#10;Уровень">${escapeHtml((b.questions || []).join("\n"))}</textarea>
+                    <span class="form-hint">Каждая строка — отдельный вопрос в модальном окне Discord.</span>
+                </div>
+            </div>
+        `).join("");
+
+        list.querySelectorAll('[data-validate="id"]').forEach(inp => validateIdField(inp));
+    }
+
+    function persist() {
+        storage.set("applicationBranches", branches);
+    }
+
+    addBtn.addEventListener("click", () => {
+        branches.push({
+            id: uid(),
+            name: `Ветка ${branches.length + 1}`,
+            channel: "",
+            reviewRole: "",
+            questions: ["Ник в игре", "Уровень", "Почему хотите к нам?"],
+            enabled: true
+        });
+        persist();
+        renderBranches();
+        showToast("Ветка добавлена", "success");
+    });
+
+    list.addEventListener("click", (e) => {
+        const removeBtn = e.target.closest("[data-branch-remove]");
+        if (removeBtn) {
+            branches = branches.filter(b => b.id !== removeBtn.dataset.branchRemove);
+            persist();
+            renderBranches();
+            showToast("Ветка удалена", "info");
+            return;
+        }
+    });
+
+    list.addEventListener("change", (e) => {
+        const toggle = e.target.closest("[data-branch-toggle]");
+        if (toggle) {
+            const b = branches.find(x => x.id === toggle.dataset.branchToggle);
+            if (b) {
+                b.enabled = toggle.checked;
+                persist();
+                renderBranches();
+            }
+        }
+    });
+
+    list.addEventListener("input", (e) => {
+        const field = e.target.closest("[data-branch-field]");
+        if (!field) return;
+        const id = field.dataset.branchId;
+        const key = field.dataset.branchField;
+        const b = branches.find(x => x.id === id);
+        if (!b) return;
+
+        if (key === "questions") {
+            b.questions = field.value.split("\n").map(s => s.trim()).filter(Boolean);
+        } else {
+            b[key] = field.value;
+        }
+        persist();
+    });
+
+    saveBtn?.addEventListener("click", () => {
+        let allValid = true;
+        list.querySelectorAll('[data-validate="id"]').forEach(inp => {
+            if (!validateIdField(inp)) allValid = false;
+        });
+
+        const names = branches.map(b => (b.name || "").trim().toLowerCase());
+        const dupNames = names.filter((n, i) => n && names.indexOf(n) !== i);
+        if (dupNames.length) {
+            showToast("Названия веток не должны дублироваться", "error");
+            return;
+        }
+
+        if (!allValid) {
+            showToast("Проверьте корректность ID в ветках", "error");
+            return;
+        }
+
+        storage.set("applicationCommon", {
+            confirmText: confirmInput.value.trim()
+        });
+        persist();
+        showToast("Настройки заявок сохранены", "success");
+    });
+
+    renderBranches();
+});
+
+/* ==================== ВЫБРОС: ИГРОВЫЕ СЕРВЕРЫ + РОЛИ ==================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const list = document.getElementById("serversList");
+    const addBtn = document.getElementById("addServerBtn");
+    const saveBtn = document.getElementById("saveServersBtn");
+    if (!list || !addBtn) return;
+
+    const PRESET_SERVERS = [
+        "RU-1", "RU-2", "RU-3", "EU-1", "EU-2", "NA-1", "ASIA-1"
+    ];
+
+    let servers = storage.get("dropServers", []);
+
+    function renderServers() {
+        if (servers.length === 0) {
+            list.innerHTML = `<div class="branches-empty">Игровые серверы ещё не настроены. Нажмите «Добавить игровой сервер».</div>`;
+            return;
+        }
+
+        list.innerHTML = servers.map(s => `
+            <div class="server-card" data-server-id="${s.id}">
+                <div class="server-card-header">
+                    <div class="server-card-name">
+                        🎮 ${escapeHtml(s.name || "Без названия")}
+                        <span class="server-status ${s.enabled ? "enabled" : "disabled"}">${s.enabled ? "включён" : "выключен"}</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; color:#888; font-size:0.85rem; cursor:pointer;">
+                            <input type="checkbox" data-server-toggle="${s.id}" ${s.enabled ? "checked" : ""}>
+                            Вкл.
+                        </label>
+                        <button type="button" class="btn btn-danger" data-server-remove="${s.id}">Удалить сервер</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Игровой сервер</label>
+                        <select class="form-select" data-server-field="name" data-server-id="${s.id}">
+                            ${PRESET_SERVERS.map(name =>
+                                `<option value="${name}" ${s.name === name ? "selected" : ""}>${name}</option>`
+                            ).join("")}
+                            <option value="custom" ${!PRESET_SERVERS.includes(s.name) ? "selected" : ""}>Другой (указать)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: ${!PRESET_SERVERS.includes(s.name) ? "block" : "none"};" data-custom-name-wrap="${s.id}">
+                        <label class="form-label">Своё название сервера</label>
+                        <input type="text" class="form-input" data-server-field="customName" data-server-id="${s.id}"
+                               value="${escapeHtml(!PRESET_SERVERS.includes(s.name) ? s.name : "")}" placeholder="Например: RU-Hardcore">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Канал для уведомлений (ID)</label>
+                        <input type="text" class="form-input" data-server-field="channel" data-server-id="${s.id}"
+                               value="${escapeHtml(s.channel || "")}" placeholder="123456789012345678" data-validate="id">
+                        <span class="form-error">ID канала должен содержать 17–20 цифр</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Шаблон уведомления</label>
+                        <textarea class="form-textarea" data-server-field="message" data-server-id="${s.id}"
+                                  style="min-height:80px;">${escapeHtml(s.message || "")}</textarea>
+                        <span class="form-hint">
+                            <span class="var-tag">{location}</span>
+                            <span class="var-tag">{time}</span>
+                            <span class="var-tag">{rally_point}</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Повторять каждые (мин)</label>
+                        <input type="number" class="form-input" data-server-field="repeat" data-server-id="${s.id}"
+                               value="${s.repeat || 5}" min="1" max="60">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Автоудаление через (мин, 0 — не удалять)</label>
+                        <input type="number" class="form-input" data-server-field="autoDelete" data-server-id="${s.id}"
+                               value="${s.autoDelete || 0}" min="0" max="1440">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <label class="form-label">Роли для пинга на этом сервере</label>
+                    <div class="server-roles-list" data-roles-list="${s.id}">
+                        ${(s.roles || []).map(r => `
+                            <div class="server-role-row" data-role-id="${r.id}">
+                                <input type="text" class="form-input server-role-name" placeholder="Название роли"
+                                       data-role-field="name" data-role-id="${r.id}" value="${escapeHtml(r.name || "")}">
+                                <input type="text" class="form-input server-role-id" placeholder="Discord ID"
+                                       data-role-field="discordId" data-role-id="${r.id}" value="${escapeHtml(r.discordId || "")}" data-validate="id">
+                                <select class="form-select server-role-type" data-role-field="type" data-role-id="${r.id}">
+                                    ${["Отряд", "Звание", "Особый"].map(t =>
+                                        `<option value="${t}" ${r.type === t ? "selected" : ""}>${t}</option>`
+                                    ).join("")}
+                                </select>
+                                <button type="button" class="btn btn-danger" data-role-remove="${r.id}">✕</button>
+                            </div>
+                        `).join("") || '<div style="color:#666; font-size:0.85rem; padding: 4px;">Роли не добавлены.</div>'}
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" style="margin-top: 10px;" data-add-role="${s.id}">
+                        ➕ Добавить роль для пинга
+                    </button>
+                </div>
+            </div>
+        `).join("");
+
+        list.querySelectorAll('[data-validate="id"]').forEach(inp => validateIdField(inp));
+    }
+
+    function persist() {
+        storage.set("dropServers", servers);
+    }
+
+    addBtn.addEventListener("click", () => {
+        servers.push({
+            id: uid(),
+            name: PRESET_SERVERS[0],
+            channel: "",
+            message: "📡 **ВНИМАНИЕ: ВЫБРОС!**\nЛокация: {location}\nВремя: {time}\nСбор: {rally_point}\n\nПриготовиться к выдвижению!",
+            repeat: 5,
+            autoDelete: 0,
+            enabled: true,
+            roles: []
+        });
+        persist();
+        renderServers();
+        showToast("Игровой сервер добавлен", "success");
+    });
+
+    list.addEventListener("click", (e) => {
+        const removeServer = e.target.closest("[data-server-remove]");
+        if (removeServer) {
+            servers = servers.filter(s => s.id !== removeServer.dataset.serverRemove);
+            persist();
+            renderServers();
+            showToast("Сервер удалён", "info");
+            return;
+        }
+
+        const addRole = e.target.closest("[data-add-role]");
+        if (addRole) {
+            const s = servers.find(x => x.id === addRole.dataset.addRole);
+            if (!s) return;
+            s.roles = s.roles || [];
+            s.roles.push({ id: uid(), name: "", discordId: "", type: "Отряд" });
+            persist();
+            renderServers();
+            return;
+        }
+
+        const removeRole = e.target.closest("[data-role-remove]");
+        if (removeRole) {
+            const roleId = removeRole.dataset.roleRemove;
+            servers.forEach(s => {
+                if (s.roles) s.roles = s.roles.filter(r => r.id !== roleId);
+            });
+            persist();
+            renderServers();
+            showToast("Роль удалена", "info");
+        }
+    });
+
+    list.addEventListener("input", (e) => {
+        const field = e.target.closest("[data-server-field]");
+        if (field) {
+            const s = servers.find(x => x.id === field.dataset.serverId);
+            if (!s) return;
+            const key = field.dataset.serverField;
+
+            if (key === "name") {
+                if (field.value === "custom") {
+                    const wrap = list.querySelector(`[data-custom-name-wrap="${s.id}"]`);
+                    if (wrap) wrap.style.display = "block";
+                    return;
+                }
+                s.name = field.value;
+                const wrap = list.querySelector(`[data-custom-name-wrap="${s.id}"]`);
+                if (wrap) wrap.style.display = "none";
+            } else if (key === "customName") {
+                s.name = field.value.trim();
+            } else if (key === "repeat" || key === "autoDelete") {
+                s[key] = parseInt(field.value, 10) || 0;
+            } else {
+                s[key] = field.value;
+            }
+            persist();
+            return;
+        }
+
+        const roleField = e.target.closest("[data-role-field]");
+        if (roleField) {
+            const roleId = roleField.dataset.roleId;
+            const key = roleField.dataset.roleField;
+            for (const s of servers) {
+                const r = (s.roles || []).find(x => x.id === roleId);
+                if (r) {
+                    r[key] = roleField.value;
+                    persist();
+                    return;
+                }
+            }
+        }
+    });
+
+    list.addEventListener("change", (e) => {
+        const toggle = e.target.closest("[data-server-toggle]");
+        if (toggle) {
+            const s = servers.find(x => x.id === toggle.dataset.serverToggle);
+            if (s) {
+                s.enabled = toggle.checked;
+                persist();
+                renderServers();
+            }
+        }
+    });
+
+    saveBtn?.addEventListener("click", () => {
+        let allValid = true;
+        list.querySelectorAll('[data-validate="id"]').forEach(inp => {
+            if (!validateIdField(inp)) allValid = false;
+        });
+        if (!allValid) {
+            showToast("Проверьте корректность ID", "error");
+            return;
+        }
+
+        const names = servers.map(s => (s.name || "").trim().toLowerCase());
+        const dupNames = names.filter((n, i) => n && names.indexOf(n) !== i);
+        if (dupNames.length) {
+            showToast("Названия серверов не должны дублироваться", "error");
+            return;
+        }
+
+        persist();
+        showToast("Настройки «Выброса» сохранены", "success");
+    });
+
+    renderServers();
+});
+
+/* ==================== ЛОКАЛИЗАЦИЯ ==================== */
+const supportedLangs = ["ru", "ua", "en"];
+let dictionary = {};
+let currentDiscordLang = "ru";
+
+async function loadLanguage(lang){
+    if(!supportedLangs.includes(lang)) lang="ru";
+    try {
+        const res = await fetch(`/static/locales/${lang}.json`);
+        dictionary = await res.json();
+    } catch {
+        try {
+            const res = await fetch(`/static/locales/ru.json`);
+            dictionary = await res.json();
+        } catch {}
+        lang = "ru";
+    }
+
+    document.documentElement.lang = lang;
+    localStorage.setItem("lang", lang);
+    document.getElementById("langSelect").value = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const key = el.dataset.i18n;
+        if(dictionary[key]) el.textContent = dictionary[key];
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach(el=>{
+        const key = el.dataset.i18nTitle;
+        if(dictionary[key]) el.title = dictionary[key];
+    });
+
+    if(currentDiscordLang !== lang){
+        currentDiscordLang = lang;
+        if (typeof loadDiscordWidget === "function") {
+            loadDiscordWidget(lang);
+        }
+    }
+}
+
+function detectLanguage(){
+    const saved=localStorage.getItem("lang");
+    if(saved && supportedLangs.includes(saved)) return saved;
+    const browser=navigator.language.slice(0,2);
+    if(supportedLangs.includes(browser)) return browser;
+    return "ru";
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    loadLanguage(detectLanguage());
+    document.getElementById("langSelect").addEventListener("change",e=>loadLanguage(e.target.value));
+});
+
+/* ==================== USER MENU ==================== */
+(function initUserMenu() {
+    const menu     = document.getElementById("userMenu");
+    const toggle   = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    if (!menu || !toggle || !dropdown) return;
+
+    dropdown.removeAttribute("hidden");
+    const isOpen = () => menu.classList.contains("open");
+
+    function open() {
+        menu.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+    }
+    function close() {
+        menu.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+    }
+
+    toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isOpen() ? close() : open();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!menu.contains(e.target)) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isOpen()) {
+            close();
+            toggle.focus();
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
